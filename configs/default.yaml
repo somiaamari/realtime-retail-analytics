@@ -1,0 +1,21 @@
+video:
+  source: "0"
+  width: 1920
+  height: 1080
+  fps: 30.0
+
+model:
+  weights_path: models/yolo.pt
+  conf_threshold: 0.25
+  iou_threshold: 0.45
+  device: cpu
+  imgsz: 640
+
+tracker:
+  track_thresh: 0.5
+  match_thresh: 0.8
+  track_buffer: 30
+
+paths:
+  data_dir: data
+  output_dir: outputs
