@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.whl
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Data and model artifacts
+data/*
+!data/.gitkeep
+models/*.pt
+models/*.onnx
+models/*.engine
+models/*.pth
+models/*.weights
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
