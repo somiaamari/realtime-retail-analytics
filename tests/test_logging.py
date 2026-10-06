@@ -1,6 +1,7 @@
 """Tests for logging utilities."""
 
 import logging
+from pathlib import Path
 
 from vision_pipeline.logging_utils import get_logger, setup_logging
 
@@ -12,7 +13,7 @@ def test_get_logger_returns_named_logger() -> None:
     assert logger is logging.getLogger("vision_pipeline.test")
 
 
-def test_setup_logging_writes_formatted_log(tmp_path) -> None:
+def test_setup_logging_writes_formatted_log(tmp_path: Path) -> None:
     """Configured logging writes the message and standard metadata to a file."""
     log_path = tmp_path / "application.log"
     setup_logging(level="INFO", log_file=log_path)
