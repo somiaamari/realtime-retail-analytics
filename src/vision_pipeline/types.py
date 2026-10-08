@@ -1,8 +1,9 @@
 """Core types shared by video ingestion and object detection."""
 
 from dataclasses import dataclass
+from typing import Any
 
-import numpy as np
+from numpy.typing import NDArray
 
 
 @dataclass(frozen=True)
@@ -16,7 +17,7 @@ class FrameData:
         source_fps: Nominal source frame rate.
     """
 
-    frame: np.ndarray
+    frame: NDArray[Any]
     frame_id: int
     timestamp_s: float
     source_fps: float

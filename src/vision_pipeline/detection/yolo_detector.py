@@ -8,6 +8,7 @@ from typing import Any
 from urllib.request import urlretrieve
 
 import numpy as np
+from numpy.typing import NDArray
 
 from vision_pipeline.config import ModelConfig
 from vision_pipeline.logging_utils import get_logger
@@ -28,7 +29,7 @@ class BaseDetector(ABC):
     """Interface implemented by object detectors."""
 
     @abstractmethod
-    def detect(self, frame: np.ndarray) -> list[Detection]:
+    def detect(self, frame: NDArray[Any]) -> list[Detection]:
         """Detect objects in a BGR image."""
 
     @abstractmethod
@@ -42,7 +43,7 @@ class FakeDetector(BaseDetector):
     def __init__(self, detections: list[Detection] | None = None) -> None:
         self.detections = list(detections or [])
 
-    def detect(self, frame: np.ndarray) -> list[Detection]:
+    def detect(self, frame: NDArray[Any]) -> list[Detection]:
         """Return the configured detections without changing the input frame."""
         del frame
         return list(self.detections)
@@ -146,7 +147,7 @@ class YoloDetector(BaseDetector):
             value = item()
         return float(value)
 
-    def detect(self, frame: np.ndarray) -> list[Detection]:
+    def detect(self, frame: NDArray[Any]) -> list[Detection]:
         """Run inference and return configured classes as typed detections."""
         results = self._model.predict(
             frame,

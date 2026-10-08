@@ -6,10 +6,12 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from vision_pipeline.config import VideoConfig
 from vision_pipeline.logging_utils import get_logger
@@ -146,6 +148,7 @@ class _CaptureVideoSource(VideoSource):
             or frame.size == 0
         ):
             raise VideoSourceError(f"Corrupted frame from video source: {self!s}")
+        frame = np.asarray(frame, dtype=np.uint8)
         timestamp = float(self._capture.get(cv2.CAP_PROP_POS_MSEC)) / 1000.0
         if timestamp <= 0:
             timestamp = self._frame_id / self._fps
@@ -160,7 +163,7 @@ class _CaptureVideoSource(VideoSource):
         self._frame_id += 1
         return data
 
-    def _resize(self, frame: np.ndarray) -> np.ndarray:
+    def _resize(self, frame: NDArray[Any]) -> NDArray[Any]:
         """Fit a frame within configured dimensions without changing its ratio."""
         frame_height, frame_width = frame.shape[:2]
         scale = min(
@@ -173,7 +176,8 @@ class _CaptureVideoSource(VideoSource):
             max(1, round(frame_width * scale)),
             max(1, round(frame_height * scale)),
         )
-        return cv2.resize(frame, new_size, interpolation=cv2.INTER_AREA)
+        resized = cv2.resize(frame, new_size, interpolation=cv2.INTER_AREA)
+        return np.asarray(resized, dtype=np.uint8)
 
     def release(self) -> None:
         """Release the capture handle and clear its state."""

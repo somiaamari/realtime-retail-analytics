@@ -1,9 +1,11 @@
 """OpenCV visualization helpers for detections and per-frame HUD statistics."""
 
 from collections.abc import Sequence
+from typing import Any
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from vision_pipeline.types import Detection
 
@@ -18,12 +20,12 @@ def _class_color(class_id: int) -> tuple[int, int, int]:
 
 
 def draw_detections(
-    frame: np.ndarray,
+    frame: NDArray[Any],
     detections: Sequence[Detection],
     *,
     color: tuple[int, int, int] | None = None,
     line_thickness: int = 2,
-) -> np.ndarray:
+) -> NDArray[Any]:
     """Draw bounding boxes and confidence labels on a copied BGR frame.
 
     Args:
@@ -79,11 +81,11 @@ def draw_detections(
 
 
 def draw_overlay_stats(
-    frame: np.ndarray,
+    frame: NDArray[Any],
     fps: float,
     latency_ms: float,
     frame_id: int,
-) -> np.ndarray:
+) -> NDArray[Any]:
     """Draw a translucent FPS/latency/frame HUD on a copied BGR frame."""
     overlay = np.array(frame, copy=True)
     height, width = overlay.shape[:2]

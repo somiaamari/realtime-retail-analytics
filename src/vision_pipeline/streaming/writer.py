@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import cv2
-import numpy as np
+from numpy.typing import NDArray
 
 from vision_pipeline.logging_utils import get_logger
 from vision_pipeline.streaming.sources import VideoSource
@@ -70,7 +71,7 @@ class VideoWriter:
         """Create a writer using the source's frame rate and dimensions."""
         return cls(path, source.fps, source.width, source.height, codec=codec)
 
-    def write(self, frame: np.ndarray) -> None:
+    def write(self, frame: NDArray[Any]) -> None:
         """Write a frame matching the configured output dimensions."""
         if frame.ndim != 3 or frame.shape[2] != 3:
             raise VideoWriterError("Output frames must be three-channel BGR images.")
