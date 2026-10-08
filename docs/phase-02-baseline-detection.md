@@ -25,6 +25,14 @@ scope.
   normalization. These numbers are stage timings for the complete baseline,
   not an internal breakdown of Ultralytics' tensor postprocessing.
 
+  For example, either a class name or numeric COCO class ID can select people:
+
+  ```yaml
+  model:
+    weights_path: models/yolo11n.pt
+    classes: ["person"]
+  ```
+
 ```mermaid
 flowchart LR
     A[File / Webcam / RTSP] --> B[VideoSource]

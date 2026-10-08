@@ -72,6 +72,8 @@ configuration, and benchmark details.
 ### Phase 2 demo
 
 ![Phase 2 people detection demo](docs/assets/phase2_demo.gif)
+_Placeholder: replace with an annotated demo captured from appropriately
+licensed footage._
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local quality checks and contribution
 guidance. The package version is available as `vision_pipeline.__version__`.
