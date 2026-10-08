@@ -1,5 +1,7 @@
 """Context-managed OpenCV video writer."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import cv2
@@ -37,7 +39,7 @@ class VideoWriter:
         self.width = width
         self.height = height
         self.codec = codec
-        fourcc = cv2.VideoWriter_fourcc(*codec)
+        fourcc = cv2.VideoWriter.fourcc(*codec)
         self._writer = cv2.VideoWriter(
             str(self.path),
             fourcc,

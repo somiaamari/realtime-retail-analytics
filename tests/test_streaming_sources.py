@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import cv2
+import numpy as np
 import pytest
 
 from vision_pipeline.config import VideoConfig
@@ -12,6 +14,37 @@ from vision_pipeline.streaming.sources import (
     WebcamSource,
     create_source,
 )
+
+
+class StubCapture:
+    """Minimal OpenCV capture stand-in for live-source edge cases."""
+
+    def __init__(
+        self,
+        opened: bool,
+        reads: list[tuple[bool, np.ndarray | None]],
+    ) -> None:
+        self.opened = opened
+        self.reads = iter(reads)
+        self.released = False
+
+    def isOpened(self) -> bool:
+        return self.opened
+
+    def get(self, prop: int) -> float:
+        return {
+            cv2.CAP_PROP_FPS: 25.0,
+            cv2.CAP_PROP_FRAME_WIDTH: 64.0,
+            cv2.CAP_PROP_FRAME_HEIGHT: 48.0,
+            cv2.CAP_PROP_FRAME_COUNT: 0.0,
+            cv2.CAP_PROP_POS_MSEC: 1000.0,
+        }.get(prop, 0.0)
+
+    def read(self) -> tuple[bool, np.ndarray | None]:
+        return next(self.reads, (False, None))
+
+    def release(self) -> None:
+        self.released = True
 
 
 def test_file_source_metadata_iteration_and_release(synthetic_video: Path) -> None:
@@ -60,3 +93,94 @@ def test_resize_preserves_aspect_ratio(synthetic_video: Path) -> None:
         assert frame is not None
         assert frame.frame.shape[:2] == (60, 80)
         assert (source.width, source.height) == (80, 60)
+
+
+def test_webcam_source_reads_a_live_frame(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Webcam properties and frame metadata work for a live source."""
+    capture = StubCapture(
+        True,
+        [(True, np.zeros((48, 64, 3), dtype=np.uint8))],
+    )
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture",
+        lambda _source: capture,
+    )
+    source = WebcamSource(2)
+
+    source.open()
+    frame = source.read()
+    assert frame is not None
+    assert frame.frame_id == 0
+    assert frame.timestamp_s == 1.0
+    assert source.frame_count is None
+    assert (source.width, source.height, source.fps) == (64, 48, 25.0)
+    source.release()
+    assert capture.released
+    with pytest.raises(ValueError, match="non-negative"):
+        WebcamSource(-1)
+
+
+def test_rtsp_source_reconnects_after_failed_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An RTSP read failure triggers one bounded reconnect attempt."""
+    first = StubCapture(
+        True,
+        [
+            (True, np.zeros((48, 64, 3), dtype=np.uint8)),
+            (False, None),
+        ],
+    )
+    second = StubCapture(
+        True,
+        [(True, np.zeros((48, 64, 3), dtype=np.uint8))],
+    )
+    captures = iter((first, second))
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture",
+        lambda _source: next(captures),
+    )
+    monkeypatch.setattr("vision_pipeline.streaming.sources.time.sleep", lambda _: None)
+    source = RTSPSource(
+        "rtsp://camera/stream",
+        max_retries=1,
+        reconnect_delay_s=0,
+    )
+
+    initial_frame = source.read()
+    frame = source.read()
+
+    assert frame is not None
+    assert initial_frame is not None
+    assert initial_frame.frame_id == 0
+    assert frame.frame_id == 1
+    assert first.released
+    assert source.frame_count is None
+    source.release()
+
+
+def test_rtsp_open_exhaustion_and_corrupt_webcam_frame(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Open retries are bounded and invalid decoded frames raise clearly."""
+    failed = StubCapture(False, [])
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture",
+        lambda _source: failed,
+    )
+    monkeypatch.setattr("vision_pipeline.streaming.sources.time.sleep", lambda _: None)
+    with pytest.raises(VideoSourceError, match="after 2 attempts"):
+        RTSPSource(
+            "rtsp://camera/stream",
+            max_retries=1,
+            reconnect_delay_s=0,
+        ).open()
+    assert failed.released
+
+    corrupt = StubCapture(True, [(True, None)])
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture",
+        lambda _source: corrupt,
+    )
+    with pytest.raises(VideoSourceError, match="Corrupted frame"):
+        WebcamSource(0).read()
