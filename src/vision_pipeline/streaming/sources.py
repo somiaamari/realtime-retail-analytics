@@ -1,9 +1,11 @@
 """Video source implementations for files, webcams, and RTSP streams."""
 
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
 import time
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import cv2
 import numpy as np
@@ -313,11 +315,11 @@ class RTSPSource(_CaptureVideoSource):
             self.release()
             if attempt < self.max_retries:
                 delay = self.reconnect_delay_s * (2**attempt)
-                logger.warning(
-                    "RTSP read failed; reconnecting in %.2f seconds", delay
-                )
+                logger.warning("RTSP read failed; reconnecting in %.2f seconds", delay)
                 time.sleep(delay)
+                next_frame_id = self._frame_id
                 self.open()
+                self._frame_id = next_frame_id
         raise VideoSourceError(
             f"RTSP stream stopped after {self.max_retries + 1} read attempts: "
             f"{self.url}"

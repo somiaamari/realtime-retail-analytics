@@ -29,3 +29,19 @@ def test_video_writer_rejects_wrong_frame_size(tmp_path: Path) -> None:
     with VideoWriter(tmp_path / "output.avi", 10.0, 64, 48, codec="MJPG") as writer:
         with pytest.raises(VideoWriterError, match="does not match"):
             writer.write(np.zeros((24, 32, 3), dtype=np.uint8))
+
+
+def test_video_writer_validates_frames_and_arguments(tmp_path: Path) -> None:
+    """Invalid dimensions, codecs, and frame shapes are rejected explicitly."""
+    with pytest.raises(ValueError, match="positive"):
+        VideoWriter(tmp_path / "bad.avi", 0, 64, 48)
+    with pytest.raises(ValueError, match="four-character"):
+        VideoWriter(tmp_path / "bad.avi", 10, 64, 48, codec="bad")
+
+    writer = VideoWriter(tmp_path / "closed.avi", 10.0, 64, 48, codec="MJPG")
+    with pytest.raises(VideoWriterError, match="three-channel"):
+        writer.write(np.zeros((48, 64), dtype=np.uint8))
+    writer.release()
+    with pytest.raises(VideoWriterError, match="closed"):
+        writer.write(np.zeros((48, 64, 3), dtype=np.uint8))
+    writer.release()
