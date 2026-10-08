@@ -167,9 +167,11 @@ class YoloDetector(BaseDetector):
                 class_name = (
                     names[class_id] if isinstance(names, dict) else names[class_id]
                 )
-                if self._class_ids and class_id not in self._class_ids:
-                    continue
-                if self._class_names and class_name.casefold() not in self._class_names:
+                if (
+                    (self._class_ids or self._class_names)
+                    and class_id not in self._class_ids
+                    and class_name.casefold() not in self._class_names
+                ):
                     continue
                 coordinates = box.xyxy[0].tolist()
                 x1, y1, x2, y2 = (float(value) for value in coordinates)
