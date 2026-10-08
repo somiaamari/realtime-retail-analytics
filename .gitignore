@@ -22,11 +22,21 @@ ENV/
 # Data and model artifacts
 data/*
 !data/.gitkeep
+!data/README.md
+outputs/
+benchmarks/baseline_*.json
 models/*.pt
+models/**/*.pt
 models/*.onnx
+models/**/*.onnx
 models/*.engine
+models/**/*.engine
 models/*.pth
+models/**/*.pth
 models/*.weights
+models/**/*.weights
+models/*.download
+models/**/*.download
 *.mp4
 *.avi
 *.mov
@@ -45,4 +55,3 @@ models/*.weights
 *.swo
 .DS_Store
 Thumbs.db
-
