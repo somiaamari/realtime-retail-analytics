@@ -184,6 +184,20 @@ def test_rtsp_open_exhaustion_and_corrupt_webcam_frame(
         ).open()
     assert failed.released
 
+    def raise_capture_error(_source: str) -> StubCapture:
+        raise cv2.error("camera backend error")
+
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture",
+        raise_capture_error,
+    )
+    with pytest.raises(VideoSourceError, match="after 2 attempts"):
+        RTSPSource(
+            "rtsp://camera/stream",
+            max_retries=1,
+            reconnect_delay_s=0,
+        ).open()
+
     corrupt = StubCapture(True, [(True, None)])
     monkeypatch.setattr(
         "vision_pipeline.streaming.sources.cv2.VideoCapture",
