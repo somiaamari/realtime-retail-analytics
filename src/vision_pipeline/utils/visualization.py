@@ -35,7 +35,7 @@ def draw_detections(
     Returns:
         An annotated image with the same dimensions as ``frame``.
     """
-    annotated = frame.copy()
+    annotated = np.array(frame, copy=True)
     scale = max(0.4, min(frame.shape[1], frame.shape[0]) / 900.0)
     thickness = max(1, line_thickness)
     font_thickness = max(1, round(thickness * 0.65))
@@ -85,7 +85,7 @@ def draw_overlay_stats(
     frame_id: int,
 ) -> np.ndarray:
     """Draw a translucent FPS/latency/frame HUD on a copied BGR frame."""
-    overlay = frame.copy()
+    overlay = np.array(frame, copy=True)
     height, width = overlay.shape[:2]
     padding = max(8, round(min(width, height) * 0.018))
     scale = max(0.4, min(width, height) / 900.0)
@@ -95,15 +95,14 @@ def draw_overlay_stats(
         f"Frame: {frame_id}",
     ]
     text_sizes = [
-        cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, scale, 1)[0]
-        for line in lines
+        cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, scale, 1)[0] for line in lines
     ]
     panel_width = max(size[0] for size in text_sizes) + padding * 2
     line_height = max(size[1] for size in text_sizes) + padding
     panel_height = line_height * len(lines) + padding
     x2 = min(width, padding + panel_width)
     y2 = min(height, padding + panel_height)
-    panel = overlay.copy()
+    panel = np.array(overlay, copy=True)
     cv2.rectangle(panel, (padding, padding), (x2, y2), (20, 20, 20), cv2.FILLED)
     cv2.addWeighted(panel, 0.72, overlay, 0.28, 0, overlay)
     for index, line in enumerate(lines):

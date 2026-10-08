@@ -1,11 +1,13 @@
 """Small, dependency-free timing and throughput measurement utilities."""
 
-from collections import defaultdict, deque
-from collections.abc import Callable
-from functools import wraps
+from __future__ import annotations
+
 import json
 import statistics
 import time
+from collections import defaultdict, deque
+from collections.abc import Callable
+from functools import wraps
 from typing import ParamSpec, TypeVar
 
 P = ParamSpec("P")
@@ -24,7 +26,10 @@ class LatencyStats:
             raise ValueError("Stage duration must be non-negative.")
         self._samples[stage].append(float(duration_ms))
 
-    def summary(self, stage: str | None = None) -> dict[str, object]:
+    def summary(
+        self,
+        stage: str | None = None,
+    ) -> dict[str, float | int] | dict[str, dict[str, float | int]]:
         """Return summary statistics for one stage or all recorded stages."""
         if stage is not None:
             samples = self._samples.get(stage, [])
