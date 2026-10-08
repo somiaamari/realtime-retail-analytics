@@ -7,6 +7,11 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 
+def _default_classes() -> list[str | int]:
+    """Select the COCO person class by default."""
+    return [0]
+
+
 class StrictConfigModel(BaseModel):
     """Base model that rejects unknown configuration keys."""
 
@@ -33,7 +38,7 @@ class ModelConfig(StrictConfigModel):
     iou_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.45
     device: str = "auto"
     imgsz: int = Field(default=640, gt=0)
-    classes: list[str | int] = Field(default_factory=lambda: [0])
+    classes: list[str | int] = Field(default_factory=_default_classes)
 
 
 class TrackerConfig(StrictConfigModel):

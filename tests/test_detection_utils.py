@@ -1,8 +1,13 @@
 """Tests for core detection types, fake detections, and visualization."""
 
-import numpy as np
+from pathlib import Path
+from types import SimpleNamespace
 
-from vision_pipeline.detection.yolo_detector import FakeDetector
+import numpy as np
+import pytest
+
+from vision_pipeline.config import ModelConfig
+from vision_pipeline.detection.yolo_detector import FakeDetector, YoloDetector
 from vision_pipeline.types import Detection
 from vision_pipeline.utils.visualization import draw_detections, draw_overlay_stats
 
@@ -38,3 +43,128 @@ def test_overlay_draws_on_a_copy() -> None:
     assert overlay.shape == frame.shape
     assert np.any(overlay != frame)
     assert not np.any(frame)
+
+
+def test_yolo_detector_converts_and_filters_without_ultralytics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The wrapper converts mocked Ultralytics output and filters by name."""
+    person = SimpleNamespace(
+        cls=np.array([0.0]),
+        conf=np.array([0.9]),
+        xyxy=np.array([[1.0, 2.0, 30.0, 40.0]]),
+    )
+    car = SimpleNamespace(
+        cls=np.array([2.0]),
+        conf=np.array([0.8]),
+        xyxy=np.array([[5.0, 6.0, 20.0, 25.0]]),
+    )
+
+    class MockYolo:
+        names = {0: "person", 2: "car"}
+
+        def predict(self, *_args: object, **_kwargs: object) -> list[object]:
+            return [SimpleNamespace(names=self.names, boxes=[person, car])]
+
+    class MockUltralytics:
+        YOLO = staticmethod(lambda _weights: MockYolo())
+
+    real_import = __import__("importlib").import_module
+
+    def mock_import(name: str) -> object:
+        if name == "ultralytics":
+            return MockUltralytics
+        return real_import(name)
+
+    def mock_download(_url: str, destination: str | Path) -> tuple[str, None]:
+        Path(destination).write_bytes(b"test weights")
+        return str(destination), None
+
+    monkeypatch.setattr(
+        "vision_pipeline.detection.yolo_detector.importlib.import_module",
+        mock_import,
+    )
+    monkeypatch.setattr(
+        "vision_pipeline.detection.yolo_detector.urlretrieve",
+        mock_download,
+    )
+    weights = tmp_path / "models" / "yolov8n.pt"
+    detector = YoloDetector(
+        ModelConfig(weights_path=weights, device="cpu", classes=["PERSON", 2])
+    )
+
+    detections = detector.detect(np.zeros((64, 64, 3), dtype=np.uint8))
+    detector.warmup()
+
+    assert weights.is_file()
+    assert detections == [Detection((1.0, 2.0, 30.0, 40.0), 0.9, 0, "person")]
+
+
+def test_yolo_device_selection_prefers_available_accelerators(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Auto device selection prefers CUDA, then MPS, then CPU."""
+    import vision_pipeline.detection.yolo_detector as yolo_module
+
+    monkeypatch.setattr(
+        yolo_module.importlib,
+        "import_module",
+        lambda _name: SimpleNamespace(
+            cuda=SimpleNamespace(is_available=lambda: True),
+            backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: True)),
+        ),
+    )
+    assert YoloDetector._select_device("auto") == "cuda"
+
+    monkeypatch.setattr(
+        yolo_module.importlib,
+        "import_module",
+        lambda _name: SimpleNamespace(
+            cuda=SimpleNamespace(is_available=lambda: False),
+            backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: True)),
+        ),
+    )
+    assert YoloDetector._select_device("auto") == "mps"
+
+    monkeypatch.setattr(
+        yolo_module.importlib,
+        "import_module",
+        lambda _name: SimpleNamespace(
+            cuda=SimpleNamespace(is_available=lambda: False),
+            backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: False)),
+        ),
+    )
+    assert YoloDetector._select_device("auto") == "cpu"
+    assert YoloDetector._select_device("CPU") == "CPU"
+
+
+def test_yolo_class_names_and_existing_weights(tmp_path: Path) -> None:
+    """String selectors resolve against list names and existing weights persist."""
+    weights = tmp_path / "custom.pt"
+    weights.write_bytes(b"weights")
+
+    assert YoloDetector._ensure_weights(weights) == weights
+    assert YoloDetector._ensure_weights(tmp_path / "custom-missing.pt").name == (
+        "custom-missing.pt"
+    )
+    assert YoloDetector._resolve_classes(["person"], ["person", "bike"]) == (
+        {0},
+        {"person"},
+    )
+
+
+def test_yolo_detector_reports_missing_optional_extra(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Missing Ultralytics raises an actionable install instruction."""
+
+    def missing_import(_name: str) -> object:
+        raise ModuleNotFoundError("no ultralytics")
+
+    monkeypatch.setattr(
+        "vision_pipeline.detection.yolo_detector.importlib.import_module",
+        missing_import,
+    )
+    with pytest.raises(ImportError, match=r"\.\[detection\]"):
+        YoloDetector(ModelConfig(device="cpu"))
