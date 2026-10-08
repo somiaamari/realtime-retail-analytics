@@ -1,8 +1,11 @@
 """Detector interfaces and Ultralytics YOLO integration."""
 
-from abc import ABC, abstractmethod
 import importlib
+import os
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
+from urllib.request import urlretrieve
 
 import numpy as np
 
@@ -11,6 +14,14 @@ from vision_pipeline.logging_utils import get_logger
 from vision_pipeline.types import Detection
 
 logger = get_logger(__name__)
+_WEIGHT_URLS = {
+    "yolov8n.pt": (
+        "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.pt"
+    ),
+    "yolo11n.pt": (
+        "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt"
+    ),
+}
 
 
 class BaseDetector(ABC):
@@ -53,7 +64,8 @@ class YoloDetector(BaseDetector):
                 "with `pip install -e '.[detection]'`."
             ) from error
         self.device = self._select_device(self.config.device)
-        self._model = ultralytics.YOLO(str(self.config.weights_path))
+        weights_path = self._ensure_weights(self.config.weights_path)
+        self._model = ultralytics.YOLO(str(weights_path))
         self._class_ids, self._class_names = self._resolve_classes(
             self.config.classes,
             self._model.names,
@@ -63,6 +75,25 @@ class YoloDetector(BaseDetector):
             self.config.weights_path,
             self.device,
         )
+
+    @staticmethod
+    def _ensure_weights(weights_path: Path) -> Path:
+        """Download supported nano weights directly to their configured path."""
+        path = weights_path
+        if path.is_file():
+            return path
+        download_url = _WEIGHT_URLS.get(path.name)
+        if download_url is None:
+            return path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path = path.with_name(f"{path.name}.download")
+        try:
+            logger.info("Downloading YOLO weights from %s to %s", download_url, path)
+            urlretrieve(download_url, temporary_path)
+            os.replace(temporary_path, path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+        return path
 
     @staticmethod
     def _select_device(requested: str) -> str:
@@ -134,9 +165,7 @@ class YoloDetector(BaseDetector):
             for box in boxes:
                 class_id = int(self._number(box.cls[0]))
                 class_name = (
-                    names[class_id]
-                    if isinstance(names, dict)
-                    else names[class_id]
+                    names[class_id] if isinstance(names, dict) else names[class_id]
                 )
                 if self._class_ids and class_id not in self._class_ids:
                     continue
