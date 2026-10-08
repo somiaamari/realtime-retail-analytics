@@ -101,7 +101,10 @@ class _CaptureVideoSource(VideoSource):
         """Open and cache stream properties."""
         if self._capture is not None and self._capture.isOpened():
             return
-        capture = self._open_capture()
+        try:
+            capture = self._open_capture()
+        except cv2.error as error:
+            raise VideoSourceError(f"Unable to open video source: {self!s}") from error
         if not capture.isOpened():
             capture.release()
             raise VideoSourceError(f"Unable to open video source: {self!s}")
@@ -128,7 +131,12 @@ class _CaptureVideoSource(VideoSource):
         if self._capture is None:
             self.open()
         assert self._capture is not None
-        ok, frame = self._capture.read()
+        try:
+            ok, frame = self._capture.read()
+        except cv2.error as error:
+            raise VideoSourceError(
+                f"Unable to read frame from video source: {self!s}"
+            ) from error
         if not ok:
             return None
         if (
@@ -282,11 +290,17 @@ class RTSPSource(_CaptureVideoSource):
             raise ValueError("Retry count and reconnect delay must be non-negative.")
 
     def _open_capture(self) -> cv2.VideoCapture:
+        last_error: cv2.error | None = None
         for attempt in range(self.max_retries + 1):
-            capture = cv2.VideoCapture(self.url)
-            if capture.isOpened():
+            try:
+                capture = cv2.VideoCapture(self.url)
+            except cv2.error as error:
+                last_error = error
+                capture = None
+            if capture is not None and capture.isOpened():
                 return capture
-            capture.release()
+            if capture is not None:
+                capture.release()
             if attempt < self.max_retries:
                 delay = self.reconnect_delay_s * (2**attempt)
                 logger.warning(
@@ -296,10 +310,13 @@ class RTSPSource(_CaptureVideoSource):
                     delay,
                 )
                 time.sleep(delay)
-        raise VideoSourceError(
+        source_error = VideoSourceError(
             f"Unable to open RTSP stream after {self.max_retries + 1} attempts: "
-            f"{self.url}"
+            f"{self!s}"
         )
+        if last_error is not None:
+            raise source_error from last_error
+        raise source_error
 
     def read(self) -> FrameData | None:
         """Read a frame, reconnecting after a failed live-stream read."""
