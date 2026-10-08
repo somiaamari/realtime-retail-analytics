@@ -159,6 +159,13 @@ def test_rtsp_source_reconnects_after_failed_read(
     source.release()
 
 
+def test_rtsp_source_redacts_credentials_and_query_from_display() -> None:
+    """RTSP log/error representations omit URL credentials and query tokens."""
+    source = RTSPSource("rtsp://user:secret@camera.local:8554/live?token=private")
+
+    assert str(source) == "rtsp://camera.local:8554/live"
+
+
 def test_rtsp_open_exhaustion_and_corrupt_webcam_frame(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
