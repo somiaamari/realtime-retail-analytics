@@ -31,7 +31,7 @@ class ModelConfig(StrictConfigModel):
     weights_path: Path = Path("models/yolov8n.pt")
     conf_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.25
     iou_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.45
-    device: str = "cpu"
+    device: str = "auto"
     imgsz: int = Field(default=640, gt=0)
     classes: list[str | int] = Field(default_factory=lambda: [0])
 
