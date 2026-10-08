@@ -98,7 +98,10 @@ def test_yolo_detector_converts_and_filters_without_ultralytics(
     detector.warmup()
 
     assert weights.is_file()
-    assert detections == [Detection((1.0, 2.0, 30.0, 40.0), 0.9, 0, "person")]
+    assert detections == [
+        Detection((1.0, 2.0, 30.0, 40.0), 0.9, 0, "person"),
+        Detection((5.0, 6.0, 20.0, 25.0), 0.8, 2, "car"),
+    ]
 
 
 def test_yolo_device_selection_prefers_available_accelerators(
