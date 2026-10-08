@@ -20,16 +20,20 @@ class VideoConfig(StrictConfigModel):
     width: int = Field(default=1920, gt=0)
     height: int = Field(default=1080, gt=0)
     fps: Annotated[float, Field(gt=0)] = 30.0
+    resize: bool = False
+    max_retries: int = Field(default=5, ge=0)
+    reconnect_delay_s: Annotated[float, Field(ge=0.0)] = 1.0
 
 
 class ModelConfig(StrictConfigModel):
     """Model artifact location and inference thresholds."""
 
-    weights_path: Path = Path("models/yolo.pt")
+    weights_path: Path = Path("models/yolov8n.pt")
     conf_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.25
     iou_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.45
     device: str = "cpu"
     imgsz: int = Field(default=640, gt=0)
+    classes: list[str | int] = Field(default_factory=lambda: [0])
 
 
 class TrackerConfig(StrictConfigModel):
