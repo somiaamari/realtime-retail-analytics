@@ -6,6 +6,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import cv2
 import numpy as np
@@ -331,8 +332,10 @@ class RTSPSource(_CaptureVideoSource):
         return None
 
     def __str__(self) -> str:
-        """Return the stream URL for logs and errors."""
-        return self.url
+        """Return a credential-free stream URL for logs and errors."""
+        parsed = urlsplit(self.url)
+        netloc = parsed.netloc.rsplit("@", maxsplit=1)[-1]
+        return urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
 
 
 def create_source(config: VideoConfig) -> VideoSource:
