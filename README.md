@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
-A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system will combine video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, and a FastAPI/React dashboard, with ONNX and TensorRT optimization as later milestones. Phase 1 established a reproducible Python package, configuration, logging, quality tooling, and CI. Phase 2 adds video ingestion, baseline YOLO detection, annotation, and latency measurement.
+A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, and a FastAPI/React dashboard, with ONNX and TensorRT optimization as later milestones. Phases 1-3 established the Python package, video/detection flow, and tracking. Phase 4 adds reproducible zone, line-crossing, dwell-time, heatmap, event, and time-series analytics.
 
 ## Planned architecture
 
@@ -23,7 +23,7 @@ flowchart LR
 - [x] Phase 1: Foundation
 - [x] Phase 2: Video I/O & baseline detection
 - [x] Phase 3: Tracking
-- [ ] Phase 4: Analytics engine
+- [x] Phase 4: Analytics engine
 - [ ] Phase 5: Dataset & fine-tuning
 - [ ] Phase 6: Evaluation & benchmarking
 - [ ] Phase 7: Model optimization (ONNX/TensorRT)
@@ -73,4 +73,5 @@ For ByteTrack IDs, low-confidence recovery, trails, and offline validation
 against the optional Supervision reference adapter, see
 [the Phase 3 tracking guide](docs/phase-03-tracking.md).
 
-
+For zone setup, line direction, events, heatmaps, and analytics CLI usage, see
+[the Phase 4 analytics guide](docs/phase-04-analytics.md).

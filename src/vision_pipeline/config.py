@@ -6,6 +6,8 @@ from typing import Annotated
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from vision_pipeline.analytics.geometry import AnalyticsConfig
+
 
 def _default_classes() -> list[str | int]:
     """Select the COCO person class by default."""
@@ -110,6 +112,7 @@ class AppConfig(StrictConfigModel):
     video: VideoConfig = Field(default_factory=VideoConfig)
     model: ModelConfig = Field(default_factory=ModelConfig)
     tracker: TrackerConfig = Field(default_factory=TrackerConfig)
+    analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)
 
 

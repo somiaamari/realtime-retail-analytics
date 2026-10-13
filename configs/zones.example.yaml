@@ -1,0 +1,18 @@
+zones:
+  - id: queue
+    name: Queue
+    type: queue
+    normalized: true
+    color: [0, 200, 255]
+    points:
+      - [0.30, 0.40]
+      - [0.68, 0.40]
+      - [0.72, 0.95]
+      - [0.26, 0.95]
+
+lines:
+  - id: entrance
+    name: Entrance
+    normalized: true
+    start: [0.50, 0.20]
+    end: [0.50, 0.80]

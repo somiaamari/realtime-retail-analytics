@@ -1,12 +1,13 @@
 """OpenCV visualization helpers for detections and per-frame HUD statistics."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
+from vision_pipeline.analytics.geometry import CountingLine, PolygonZone
 from vision_pipeline.types import Detection, Track
 
 
@@ -163,11 +164,132 @@ def draw_tracks(
     return annotated
 
 
+def draw_zones(
+    frame: NDArray[Any],
+    zones: Sequence[PolygonZone],
+    occupancy: Mapping[str, int],
+    *,
+    thresholds: Mapping[str, int] | None = None,
+    alpha: float = 0.22,
+) -> NDArray[Any]:
+    """Draw translucent zone boundaries and current occupancy labels.
+
+    Args:
+        frame: Input image in BGR order.
+        zones: Zones to draw; normalized coordinates are scaled to this frame.
+        occupancy: Current occupants indexed by zone ID.
+        thresholds: Optional per-zone occupancy limits; over-limit zones turn red.
+        alpha: Polygon fill opacity between zero and one.
+
+    Returns:
+        An annotated image with the same dimensions as ``frame``.
+    """
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("Zone fill alpha must be between zero and one.")
+    annotated = np.array(frame, copy=True)
+    height, width = frame.shape[:2]
+    scale = max(0.4, min(width, height) / 900.0)
+    for zone in zones:
+        points = np.asarray(zone.to_pixels((width, height)), dtype=np.int32).reshape(
+            -1, 1, 2
+        )
+        count = occupancy.get(zone.id, 0)
+        color = tuple(zone.color)
+        if thresholds is not None and zone.id in thresholds:
+            if count > thresholds[zone.id]:
+                color = (0, 0, 255)
+        overlay = np.array(annotated, copy=True)
+        cv2.fillPoly(overlay, [points], color, lineType=cv2.LINE_AA)
+        cv2.addWeighted(overlay, alpha, annotated, 1.0 - alpha, 0, annotated)
+        cv2.polylines(
+            annotated,
+            [points],
+            True,
+            color,
+            max(1, round(scale * 2)),
+            lineType=cv2.LINE_AA,
+        )
+        anchor = tuple(int(value) for value in points[0, 0])
+        cv2.putText(
+            annotated,
+            f"{zone.name}: {count}",
+            (anchor[0], max(18, anchor[1] - 6)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            scale,
+            color,
+            max(1, round(scale * 1.5)),
+            lineType=cv2.LINE_AA,
+        )
+    return annotated
+
+
+def draw_lines(
+    frame: NDArray[Any],
+    lines: Sequence[CountingLine],
+    counts: Mapping[str, Mapping[str, int]],
+) -> NDArray[Any]:
+    """Draw directed counting lines and their live IN/OUT totals."""
+    annotated = np.array(frame, copy=True)
+    height, width = frame.shape[:2]
+    scale = max(0.4, min(width, height) / 900.0)
+    for line in lines:
+        start, end = line.to_pixels((width, height))
+        color = (255, 150, 0)
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+        length = max(1.0, float(np.hypot(dx, dy)))
+        midpoint = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
+        arrow_length = max(12, round(min(width, height) * 0.035))
+        normal = (-dy / length, dx / length)
+        arrow_start = (
+            round(midpoint[0] - normal[0] * arrow_length),
+            round(midpoint[1] - normal[1] * arrow_length),
+        )
+        arrow_end = (
+            round(midpoint[0] + normal[0] * arrow_length),
+            round(midpoint[1] + normal[1] * arrow_length),
+        )
+        cv2.arrowedLine(
+            annotated,
+            start,
+            end,
+            color,
+            max(1, round(scale * 2)),
+            line_type=cv2.LINE_AA,
+        )
+        cv2.arrowedLine(
+            annotated,
+            arrow_start,
+            arrow_end,
+            (0, 255, 0),
+            max(1, round(scale * 2)),
+            line_type=cv2.LINE_AA,
+            tipLength=0.35,
+        )
+        totals = counts.get(line.id, {})
+        label = f"{line.name} IN:{totals.get('in', 0)} OUT:{totals.get('out', 0)}"
+        cv2.putText(
+            annotated,
+            label,
+            (start[0], max(18, start[1] - 6)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            scale,
+            color,
+            max(1, round(scale * 1.5)),
+            lineType=cv2.LINE_AA,
+        )
+    return annotated
+
+
 def draw_overlay_stats(
     frame: NDArray[Any],
     fps: float,
     latency_ms: float,
     frame_id: int,
+    *,
+    total_unique: int | None = None,
+    line_totals: Mapping[str, int] | None = None,
+    busiest_zone: str | None = None,
 ) -> NDArray[Any]:
     """Draw a translucent FPS/latency/frame HUD on a copied BGR frame."""
     overlay = np.array(frame, copy=True)
@@ -179,6 +301,17 @@ def draw_overlay_stats(
         f"Latency: {latency_ms:.1f} ms",
         f"Frame: {frame_id}",
     ]
+    if total_unique is not None:
+        lines.append(f"Unique visitors: {total_unique}")
+    if line_totals is not None:
+        lines.append(
+            "IN/OUT/NET: "
+            f"{line_totals.get('in', 0)}/"
+            f"{line_totals.get('out', 0)}/"
+            f"{line_totals.get('net', 0)}"
+        )
+    if busiest_zone is not None:
+        lines.append(f"Busiest zone: {busiest_zone}")
     text_sizes = [
         cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, scale, 1)[0] for line in lines
     ]
