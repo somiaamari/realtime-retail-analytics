@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from vision_pipeline.types import Detection
+from vision_pipeline.types import Detection, Track
 
 
 def _class_color(class_id: int) -> tuple[int, int, int]:
@@ -75,6 +75,89 @@ def draw_detections(
             scale,
             (255, 255, 255),
             font_thickness,
+            lineType=cv2.LINE_AA,
+        )
+    return annotated
+
+
+def _track_color(track_id: int) -> tuple[int, int, int]:
+    """Return a stable BGR color derived from a track ID."""
+    value = (track_id * 0x9E3779B1) & 0xFFFFFFFF
+    return (
+        64 + (value & 0xFF) % 192,
+        64 + ((value >> 8) & 0xFF) % 192,
+        64 + ((value >> 16) & 0xFF) % 192,
+    )
+
+
+def draw_tracks(
+    frame: NDArray[Any],
+    tracks: Sequence[Track],
+    *,
+    show_trails: bool = True,
+    line_thickness: int = 2,
+) -> NDArray[Any]:
+    """Draw persistent IDs, boxes, and optional bottom-center trails.
+
+    Args:
+        frame: Input image in BGR order.
+        tracks: Tracks to annotate.
+        show_trails: Whether to draw each track's bounded history.
+        line_thickness: Bounding-box and trail width in pixels.
+
+    Returns:
+        An annotated image with the same dimensions as ``frame``.
+    """
+    annotated = np.array(frame, copy=True)
+    scale = max(0.4, min(frame.shape[1], frame.shape[0]) / 900.0)
+    thickness = max(1, line_thickness)
+    for track in tracks:
+        color = _track_color(track.track_id)
+        x1, y1, x2, y2 = (round(value) for value in track.bbox_xyxy)
+        cv2.rectangle(
+            annotated,
+            (x1, y1),
+            (x2, y2),
+            color,
+            thickness,
+            lineType=cv2.LINE_AA,
+        )
+        if show_trails and track.history is not None and len(track.history) > 1:
+            points = np.asarray(
+                [(round(x), round(y)) for x, y in track.history],
+                dtype=np.int32,
+            ).reshape(-1, 1, 2)
+            cv2.polylines(
+                annotated,
+                [points],
+                False,
+                color,
+                thickness,
+                lineType=cv2.LINE_AA,
+            )
+        label = f"ID {track.track_id}"
+        (label_width, label_height), baseline = cv2.getTextSize(
+            label,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            scale,
+            max(1, round(thickness * 0.65)),
+        )
+        label_top = max(0, y1 - label_height - baseline - 6)
+        cv2.rectangle(
+            annotated,
+            (x1, label_top),
+            (x1 + label_width + 8, label_top + label_height + baseline + 6),
+            color,
+            cv2.FILLED,
+        )
+        cv2.putText(
+            annotated,
+            label,
+            (x1 + 4, label_top + label_height + 2),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            scale,
+            (255, 255, 255),
+            max(1, round(thickness * 0.65)),
             lineType=cv2.LINE_AA,
         )
     return annotated

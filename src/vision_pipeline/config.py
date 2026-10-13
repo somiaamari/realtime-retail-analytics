@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 def _default_classes() -> list[str | int]:
@@ -47,6 +47,54 @@ class TrackerConfig(StrictConfigModel):
     track_thresh: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     match_thresh: Annotated[float, Field(ge=0.0, le=1.0)] = 0.8
     track_buffer: int = Field(default=30, gt=0)
+    high_thresh: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    low_thresh: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    new_track_thresh: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    min_box_area: float = Field(default=0.0, ge=0.0)
+    min_hits: int = Field(default=1, gt=0)
+    frame_rate: float = Field(default=30.0, gt=0.0)
+    history_len: int = Field(default=30, gt=0)
+    fuse_score: bool = False
+
+    @model_validator(mode="after")
+    def validate_threshold_order(self) -> "TrackerConfig":
+        """Fill legacy-compatible defaults and validate confidence bands."""
+        high_thresh = (
+            self.track_thresh if self.high_thresh is None else self.high_thresh
+        )
+        low_thresh = (
+            min(0.1, high_thresh) if self.low_thresh is None else self.low_thresh
+        )
+        new_track_thresh = (
+            high_thresh if self.new_track_thresh is None else self.new_track_thresh
+        )
+        self.high_thresh = high_thresh
+        self.low_thresh = low_thresh
+        self.new_track_thresh = new_track_thresh
+        if low_thresh > high_thresh:
+            raise ValueError("low_thresh must be lower than high_thresh")
+        if new_track_thresh > high_thresh:
+            raise ValueError("new_track_thresh cannot exceed high_thresh")
+        return self
+
+    @property
+    def effective_high_thresh(self) -> float:
+        """Return the high confidence threshold, falling back to track_thresh."""
+        return self.track_thresh if self.high_thresh is None else self.high_thresh
+
+    @property
+    def effective_new_track_thresh(self) -> float:
+        """Return the threshold used to initialize a new track."""
+        if self.new_track_thresh is not None:
+            return self.new_track_thresh
+        return self.effective_high_thresh
+
+    @property
+    def effective_low_thresh(self) -> float:
+        """Return low threshold while retaining support for old custom thresholds."""
+        if self.low_thresh is not None:
+            return self.low_thresh
+        return min(0.1, self.effective_high_thresh)
 
 
 class PathsConfig(StrictConfigModel):

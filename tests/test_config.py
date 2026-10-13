@@ -20,6 +20,10 @@ def test_load_default_config() -> None:
     assert config.video.width == 1920
     assert config.model.conf_threshold == 0.25
     assert config.tracker.track_buffer == 30
+    assert config.tracker.high_thresh == 0.5
+    assert config.tracker.low_thresh == 0.1
+    assert config.tracker.effective_high_thresh == 0.5
+    assert config.tracker.effective_low_thresh == 0.1
     assert config.paths.data_dir == Path("data")
 
 

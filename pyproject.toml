@@ -15,12 +15,16 @@ dependencies = [
     "opencv-python>=4.8",
     "pydantic>=2.0",
     "PyYAML>=6.0",
+    "scipy>=1.10",
 ]
 
 [project.optional-dependencies]
 detection = [
     "torch>=2.0",
     "ultralytics>=8.2",
+]
+tracking-ref = [
+    "supervision>=0.22",
 ]
 
 [tool.setuptools]
@@ -51,6 +55,10 @@ no_implicit_optional = true
 
 [[tool.mypy.overrides]]
 module = ["yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

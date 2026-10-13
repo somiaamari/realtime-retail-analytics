@@ -22,7 +22,7 @@ flowchart LR
 
 - [x] Phase 1: Foundation
 - [x] Phase 2: Video I/O & baseline detection
-- [ ] Phase 3: Tracking
+- [x] Phase 3: Tracking
 - [ ] Phase 4: Analytics engine
 - [ ] Phase 5: Dataset & fine-tuning
 - [ ] Phase 6: Evaluation & benchmarking
@@ -68,6 +68,10 @@ source without keeping an annotated output, run
 `python scripts/benchmark_baseline.py --source data/raw/my_video.mp4 --frames 100`.
 See [the Phase 2 guide](docs/phase-02-baseline-detection.md) for webcam/RTSP,
 configuration, and benchmark details.
+
+For ByteTrack IDs, low-confidence recovery, trails, and offline validation
+against the optional Supervision reference adapter, see
+[the Phase 3 tracking guide](docs/phase-03-tracking.md).
 
 ### Phase 2 demo
 
