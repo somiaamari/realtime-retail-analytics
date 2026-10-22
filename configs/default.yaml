@@ -5,7 +5,7 @@ video:
   fps: 30.0
 
 model:
-  weights_path: models/yolov8n.pt
+  weights_path: models/retail_people_clean.pt
   conf_threshold: 0.25
   iou_threshold: 0.45
   device: auto
