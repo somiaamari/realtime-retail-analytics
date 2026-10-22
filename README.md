@@ -24,7 +24,7 @@ flowchart LR
 - [x] Phase 2: Video I/O & baseline detection
 - [x] Phase 3: Tracking
 - [x] Phase 4: Analytics engine
-- [ ] Phase 5: Dataset & fine-tuning
+- [x] Phase 5: Dataset & fine-tuning
 - [ ] Phase 6: Evaluation & benchmarking
 - [ ] Phase 7: Model optimization (ONNX/TensorRT)
 - [ ] Phase 8: Real-time streaming pipeline
@@ -32,6 +32,15 @@ flowchart LR
 - [ ] Phase 10: Dashboard
 - [ ] Phase 11: Docker/tests/CI-CD
 - [ ] Phase 12: Docs/demo/release
+
+### Phase 5: Custom Fine-Tuning Results
+
+| Model | mAP50 | mAP50-95 | Precision | Recall |
+|---|---|---|---|---|
+| YOLOv8n (Base COCO) | N/A | N/A | N/A | N/A |
+| YOLOv8n (Fine-tuned) | **0.939** | 0.680 | 0.867 | 0.911 |
+
+The model was fine-tuned on a 1.3k image Roboflow dataset (CC BY 4.0) to improve person detection for store CCTV angles.
 
 ## Quickstart
 
@@ -63,6 +72,7 @@ python scripts/run_detection.py --source data/raw/my_video.mp4 --output outputs/
 
 The default model is `models/yolov8n.pt`; set `model.weights_path` in
 `configs/default.yaml` (or use `--weights`) to select `yolo11n.pt` instead.
+For the custom retail detector, users can set `model.weights_path: models/retail_people_clean.pt` in `configs/default.yaml` to use the fine-tuned model.
 The first run downloads official model weights as needed. To benchmark a
 source without keeping an annotated output, run
 `python scripts/benchmark_baseline.py --source data/raw/my_video.mp4 --frames 100`.
@@ -75,3 +85,5 @@ against the optional Supervision reference adapter, see
 
 For zone setup, line direction, events, heatmaps, and analytics CLI usage, see
 [the Phase 4 analytics guide](docs/phase-04-analytics.md).
+
+[the Phase 5 fine-tuning guide](docs/phase-05-finetuning.md)
