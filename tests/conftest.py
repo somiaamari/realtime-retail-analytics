@@ -35,7 +35,7 @@ def synthetic_video(tmp_path: Path) -> Iterator[Path]:
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Skip tests marked for the optional detection extra when absent."""
+    """Skip tests marked for optional extras when their dependencies are absent."""
     try:
         import ultralytics  # noqa: F401
     except ImportError:
@@ -44,4 +44,13 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         )
         for item in items:
             if "requires_detection" in item.keywords:
+                item.add_marker(skip)
+    try:
+        import motmetrics  # noqa: F401
+    except ImportError:
+        skip = pytest.mark.skip(
+            reason="requires the optional evaluation extra (py-motmetrics)"
+        )
+        for item in items:
+            if "requires_eval" in item.keywords:
                 item.add_marker(skip)

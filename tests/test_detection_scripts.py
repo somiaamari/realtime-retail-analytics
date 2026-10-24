@@ -123,5 +123,5 @@ def test_benchmark_cli_persists_json_and_markdown_row(
     assert {"read", "preprocess", "inference", "postprocess", "draw", "write"} <= (
         result["stage_latency_ms"].keys()
     )
-    assert "yolov8n" in readme
+    assert Path(result["model"]).stem in readme
     assert "cpu" in readme

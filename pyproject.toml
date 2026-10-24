@@ -26,6 +26,11 @@ detection = [
 tracking-ref = [
     "supervision>=0.22",
 ]
+eval = [
+    "motmetrics>=1.4",
+    "matplotlib>=3.7",
+    "psutil>=5.9",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -66,4 +71,5 @@ testpaths = ["tests"]
 addopts = "-ra"
 markers = [
     "requires_detection: tests requiring the optional Ultralytics detection extra",
+    "requires_eval: tests requiring motmetrics from the optional evaluation extra",
 ]
