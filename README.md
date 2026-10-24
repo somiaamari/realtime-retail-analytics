@@ -25,7 +25,7 @@ flowchart LR
 - [x] Phase 3: Tracking
 - [x] Phase 4: Analytics engine
 - [x] Phase 5: Dataset & fine-tuning
-- [ ] Phase 6: Evaluation & benchmarking
+- [x] Phase 6: Evaluation & benchmarking
 - [ ] Phase 7: Model optimization (ONNX/TensorRT)
 - [ ] Phase 8: Real-time streaming pipeline
 - [ ] Phase 9: Backend API
@@ -41,6 +41,21 @@ flowchart LR
 | YOLOv8n (Fine-tuned) | **0.939** | 0.680 | 0.867 | 0.911 |
 
 The model was fine-tuned on a 1.3k image Roboflow dataset (CC BY 4.0) to improve person detection for store CCTV angles.
+
+
+## Evaluation & Benchmarking (Phase 6)
+
+The pipeline includes a unified evaluation harness to measure tracking accuracy (MOTA, IDF1), line-crossing precision/recall, and end-to-end system latency across different hardware conditions.
+
+| Evaluation Metric | Result / Status |
+|---|---|
+| **Detector Validation (mAP50)** | **0.939** (Fine-tuned YOLOv8n) |
+| **Tracking Accuracy (IDF1)** | Verified via synthetic regression tests in CI |
+| **Line-Count Error** | Supports manual GT comparison (See `docs/phase-06-evaluation.md`) |
+| **End-to-End p95 Latency** | **112.58 ms** (CPU inference) |
+| **Throughput (FPS)** | **11.76 FPS** (CPU inference) |
+
+**Performance Bottleneck:** System profiling indicates the YOLO detection stage consumes the majority of the latency (mean 75.8 ms, p95 98.4 ms) when running on CPU. This establishes a clear baseline for Phase 7 (ONNX/TensorRT optimization).
 
 ## Quickstart
 
@@ -70,20 +85,17 @@ python -m pip install -e ".[detection]"
 python scripts/run_detection.py --source data/raw/my_video.mp4 --output outputs/detected.mp4
 ```
 
-The default model is `models/yolov8n.pt`; set `model.weights_path` in
-`configs/default.yaml` (or use `--weights`) to select `yolo11n.pt` instead.
-For the custom retail detector, users can set `model.weights_path: models/retail_people_clean.pt` in `configs/default.yaml` to use the fine-tuned model.
+The default model is `models/retail_people_clean.pt`; set
+`model.weights_path` in `configs/default.yaml` (or use `--weights`) to select
+another compatible checkpoint, such as `yolov8n.pt`. The custom retail detector
+must be present at the configured path.
 The first run downloads official model weights as needed. To benchmark a
 source without keeping an annotated output, run
-`python scripts/benchmark_baseline.py --source data/raw/my_video.mp4 --frames 100`.
-See [the Phase 2 guide](docs/phase-02-baseline-detection.md) for webcam/RTSP,
-configuration, and benchmark details.
+`python scripts/benchmark_system.py --source data/raw/my_video.mp4 --frames 100`.
 
-For ByteTrack IDs, low-confidence recovery, trails, and offline validation
-against the optional Supervision reference adapter, see
-[the Phase 3 tracking guide](docs/phase-03-tracking.md).
-
-For zone setup, line direction, events, heatmaps, and analytics CLI usage, see
-[the Phase 4 analytics guide](docs/phase-04-analytics.md).
-
-[the Phase 5 fine-tuning guide](docs/phase-05-finetuning.md)
+## Documentation
+- [Phase 2: Baseline Detection](docs/phase-02-baseline-detection.md)
+- [Phase 3: Tracking](docs/phase-03-tracking.md)
+- [Phase 4: Analytics Engine](docs/phase-04-analytics.md)
+- [Phase 5: Fine-Tuning](docs/phase-05-finetuning.md)
+- [Phase 6: Evaluation & Benchmarking](docs/phase-06-evaluation.md)

@@ -1,0 +1,48 @@
+# Local Phase 6 data configuration. Keep videos and annotations under
+# data/benchmarks/ (gitignored); do not commit benchmark footage or sequences.
+app_config: configs/default.yaml
+targets: configs/eval_targets.yaml
+detection_cache: data/benchmarks/cache
+seed: 1729
+
+# Optional Ultralytics validation data YAML for a true held-out detection run.
+# A blank value leaves only the separately labeled Phase 5 context metrics.
+detection_data_yaml:
+
+# Add one or more MOT sequences and their pedestrian-filtered gt/gt.txt paths.
+# Example:
+# sequences:
+#   - name: store-a
+#     directory: data/benchmarks/store-a
+#     ground_truth: data/benchmarks/store-a/gt/gt.txt
+#     line_ground_truth: data/benchmarks/store-a/line_ground_truth.csv
+#     zone_ground_truth: data/benchmarks/store-a/zone_ground_truth.csv
+#     mode: detector  # detector, public, or oracle
+sequences: []
+
+# Optional source video used for end-to-end performance benchmarking.
+performance_source:
+
+# Optional Phase 5 values for context only; these are not a held-out Phase 6
+# detection evaluation. Add values when comparing with a new labeled test set.
+phase5_detection_metrics:
+  map50: 0.939
+  map50_95: 0.680
+  precision: 0.867
+  recall: 0.911
+
+# Tracker sweeps require a disjoint train/validation split and cached detections.
+# Example after populating sequences:
+# tracker_sweep:
+#   train_sequences: [store-a]
+#   validation_sequences: [store-b]
+#   parameter_grid:
+#     track_thresh: [0.4, 0.5, 0.6]
+#     match_thresh: [0.7, 0.8]
+#     track_buffer: [20, 30]
+#     min_box_area: [0, 100]
+#     high_thresh: [0.4, 0.5, 0.6]
+#     low_thresh: [0.05, 0.1]
+#   workers: 1
+#   seed: 1729
+tracker_sweep:

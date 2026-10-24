@@ -1,0 +1,12 @@
+tracking_idf1:
+  metric: tracking.metrics.idf1
+  operator: ">="
+  value: 0.70
+line_count_error_percent:
+  metric: analytics.line_count_error_percent_mean
+  operator: "<="
+  value: 5
+end_to_end_p95_ms:
+  metric: performance.metrics.end_to_end.p95_ms
+  operator: "<="
+  value: 50
