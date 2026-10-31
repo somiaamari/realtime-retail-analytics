@@ -55,8 +55,8 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             if "requires_eval" in item.keywords:
                 item.add_marker(skip)
     try:
-        import onnxruntime  # noqa: F401
         import onnx  # noqa: F401
+        import onnxruntime  # noqa: F401
     except ImportError:
         skip = pytest.mark.skip(reason="requires the optional ONNX CPU extra")
         for item in items:

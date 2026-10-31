@@ -1,6 +1,8 @@
-import cv2
-import os
 import argparse
+import os
+
+import cv2
+
 
 def extract_frames(video_path, output_dir, num_frames=200):
     # Create output directory if it doesn't exist
@@ -45,10 +47,17 @@ def extract_frames(video_path, output_dir, num_frames=200):
     print(f"Successfully saved {saved_count} images to {output_dir}/")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract frames for INT8 calibration")
-    parser.add_argument("--video", type=str, default="data/raw/vid.mp4", help="Path to input video")
-    parser.add_argument("--out", type=str, default="data/calibration", help="Output directory")
-    parser.add_argument("--num", type=int, default=200, help="Number of frames to extract")
-    
+    parser = argparse.ArgumentParser(
+        description="Extract frames for INT8 calibration"
+    )
+    parser.add_argument(
+        "--video", type=str, default="data/raw/vid.mp4", help="Path to input video"
+    )
+    parser.add_argument(
+        "--out", type=str, default="data/calibration", help="Output directory"
+    )
+    parser.add_argument(
+        "--num", type=int, default=200, help="Number of frames to extract"
+    )
     args = parser.parse_args()
     extract_frames(args.video, args.out, args.num)
