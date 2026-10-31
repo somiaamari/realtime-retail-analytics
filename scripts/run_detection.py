@@ -9,7 +9,7 @@ from pathlib import Path
 import cv2
 
 from vision_pipeline.config import AppConfig, load_config
-from vision_pipeline.detection.yolo_detector import YoloDetector
+from vision_pipeline.detection.factory import create_detector
 from vision_pipeline.logging_utils import setup_logging
 from vision_pipeline.streaming.sources import VideoSourceError, create_source
 from vision_pipeline.streaming.writer import VideoWriter, VideoWriterError
@@ -78,8 +78,7 @@ def run(args: argparse.Namespace) -> int:
     """Execute detection, annotate frames, and optionally save/display them."""
     config = _configuration(args)
     output = args.output or config.paths.output_dir / "detected.mp4"
-    detector = YoloDetector(config.model)
-    detector.warmup()
+    detector = create_detector(config)
     stats = LatencyStats()
     fps_meter = FPSMeter()
     frames_processed = 0
@@ -87,6 +86,7 @@ def run(args: argparse.Namespace) -> int:
     source = create_source(config.video)
     writer: VideoWriter | None = None
     try:
+        detector.warmup()
         with source:
             if not args.no_save:
                 writer = VideoWriter.from_source(output, source)
@@ -121,10 +121,17 @@ def run(args: argparse.Namespace) -> int:
                         break
                 frames_processed += 1
     finally:
-        if writer is not None:
-            writer.release()
-        if args.show:
-            cv2.destroyAllWindows()
+        try:
+            if writer is not None:
+                writer.release()
+        finally:
+            try:
+                close = getattr(detector, "close", None)
+                if callable(close):
+                    close()
+            finally:
+                if args.show:
+                    cv2.destroyAllWindows()
 
     elapsed = time.perf_counter() - started_at
     average_fps = frames_processed / elapsed if elapsed > 0 else 0.0

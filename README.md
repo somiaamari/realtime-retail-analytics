@@ -5,7 +5,20 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
-A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, and a FastAPI/React dashboard, with ONNX and TensorRT optimization as later milestones. Phases 1-3 established the Python package, video/detection flow, and tracking. Phase 4 adds reproducible zone, line-crossing, dwell-time, heatmap, event, and time-series analytics.
+A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, ONNX/TensorRT optimization, and a FastAPI/React dashboard. Phases 1-7 established the Python package, detection, tracking, analytics, fine-tuning, evaluation, and model optimization.
+
+**Phase 7 Performance Comparison:**
+By utilizing ONNX Runtime and TensorRT, we achieved a **12x speedup** over the PyTorch CPU baseline, enabling real-time inference at **183 FPS** on an NVIDIA T4 GPU.
+
+| Variant | Environment | FPS | p95 Latency | Model Size | Accuracy Status |
+|---|---|---:|---:|---:|---|
+| PyTorch FP32 (Baseline) | CPU | 15.09 | 90.50 ms | 6.51 MB | Baseline |
+| ONNX FP32 | CPU | 15.49 | 80.66 ms | 12.77 MB | Passed (Parity < 0.01) |
+| ONNX FP16 | CPU | 16.17 | 71.11 ms | 6.41 MB | Passed (Parity < 0.01) |
+| ONNX INT8 | CPU | 19.10 | 60.05 ms | 6.16 MB | Passed (Parity < 0.01) |
+| **TensorRT FP16** | **NVIDIA T4 GPU** | **183.56** | **6.39 ms** | 58.52 MB | **Passed (Parity < 0.01)** |
+
+*Model backend can be switched simply by changing `detector.backend` in `configs/default.yaml`.*
 
 ## Planned architecture
 
@@ -26,7 +39,7 @@ flowchart LR
 - [x] Phase 4: Analytics engine
 - [x] Phase 5: Dataset & fine-tuning
 - [x] Phase 6: Evaluation & benchmarking
-- [ ] Phase 7: Model optimization (ONNX/TensorRT)
+- [x] Phase 7: Model optimization (ONNX/TensorRT)
 - [ ] Phase 8: Real-time streaming pipeline
 - [ ] Phase 9: Backend API
 - [ ] Phase 10: Dashboard
@@ -99,3 +112,4 @@ source without keeping an annotated output, run
 - [Phase 4: Analytics Engine](docs/phase-04-analytics.md)
 - [Phase 5: Fine-Tuning](docs/phase-05-finetuning.md)
 - [Phase 6: Evaluation & Benchmarking](docs/phase-06-evaluation.md)
+- [Phase 7: Model Optimization](docs/phase-07-optimization.md)

@@ -1,7 +1,7 @@
 """Application configuration models and YAML loading."""
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -41,6 +41,22 @@ class ModelConfig(StrictConfigModel):
     device: str = "auto"
     imgsz: int = Field(default=640, gt=0)
     classes: list[str | int] = Field(default_factory=_default_classes)
+
+
+class DetectorConfig(StrictConfigModel):
+    """Inference backend and its optional runtime-specific settings."""
+
+    backend: Literal["auto", "pytorch", "onnx", "tensorrt"] = "pytorch"
+    precision: Literal["fp32", "fp16", "int8"] = "fp32"
+    providers: list[str] = Field(default_factory=lambda: ["CPUExecutionProvider"])
+    model_path: Path | None = None
+
+    @model_validator(mode="after")
+    def validate_backend_options(self) -> "DetectorConfig":
+        """Validate backend-specific provider configuration."""
+        if not self.providers:
+            raise ValueError("detector.providers must contain at least one provider")
+        return self
 
 
 class TrackerConfig(StrictConfigModel):
@@ -111,6 +127,7 @@ class AppConfig(StrictConfigModel):
 
     video: VideoConfig = Field(default_factory=VideoConfig)
     model: ModelConfig = Field(default_factory=ModelConfig)
+    detector: DetectorConfig = Field(default_factory=DetectorConfig)
     tracker: TrackerConfig = Field(default_factory=TrackerConfig)
     analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)

@@ -1,0 +1,141 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-10-24T11:34:27.677120+00:00",
+    "cpu_model": "Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",
+    "ram_bytes": 16830656512,
+    "gpu": null,
+    "os": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10",
+    "torch": "2.14.1",
+    "ultralytics": "8.4.183",
+    "git_commit": "348a4c5a5ec941fae71d27cf2f4e691a6008c7ec",
+    "config_sha256": "f18114ff89c7e5c65415b47ba8e68c21e81e73668b121ef1a38c007dd647a7e5",
+    "seed": 1729
+  },
+  "results": {
+    "conditions": [
+      {
+        "case": {
+          "model": "n",
+          "weights_path": "models\\retail_people_clean.pt",
+          "imgsz": 640,
+          "device": "auto",
+          "draw": true,
+          "write": false
+        },
+        "result": {
+          "frames_total": 1093,
+          "frames_measured": 1088,
+          "warmup_frames": 5,
+          "stage_latency_ms": {
+            "analytics": {
+              "count": 1088,
+              "mean": 0.18798391583379057,
+              "median": 0.17359998309984803,
+              "p95": 0.3909200080670417,
+              "p99": 0.5333939869888131,
+              "min": 0.02889998722821474,
+              "max": 1.277300005313009
+            },
+            "decode": {
+              "count": 1088,
+              "mean": 4.158637040317819,
+              "median": 3.4240499953739345,
+              "p95": 11.640840012114499,
+              "p99": 12.818675036542118,
+              "min": 1.8491999944671988,
+              "max": 23.774800007231534
+            },
+            "detect": {
+              "count": 1088,
+              "mean": 75.86467830857573,
+              "median": 74.25404997775331,
+              "p95": 98.49118000129238,
+              "p99": 144.55972400726844,
+              "min": 47.335200011730194,
+              "max": 320.3407999826595
+            },
+            "draw": {
+              "count": 1088,
+              "mean": 2.8238930140907863,
+              "median": 2.681300014955923,
+              "p95": 5.210579960839824,
+              "p99": 7.296546021825635,
+              "min": 0.6537999724969268,
+              "max": 8.32049996824935
+            },
+            "preprocess": {
+              "count": 1088,
+              "mean": 0.0028818933381390866,
+              "median": 0.002500019036233425,
+              "p95": 0.004299974534660578,
+              "p99": 0.004813029081560683,
+              "min": 0.0015999539755284786,
+              "max": 0.028499984182417393
+            },
+            "track": {
+              "count": 1088,
+              "mean": 1.6112392462780596,
+              "median": 1.5389999898616225,
+              "p95": 3.4420700016198715,
+              "p99": 4.322903978754766,
+              "min": 0.08640001760795712,
+              "max": 9.29700001142919
+            }
+          },
+          "detection_count_buckets": {
+            "0-4": {
+              "frames": 492,
+              "mean_end_to_end_ms": 86.133814027355
+            },
+            "5-9": {
+              "frames": 464,
+              "mean_end_to_end_ms": 81.283128018499
+            },
+            "10+": {
+              "frames": 132,
+              "mean_end_to_end_ms": 94.03420757470568
+            }
+          },
+          "end_to_end": {
+            "mean_ms": 85.02364274071999,
+            "median_ms": 82.84094999544322,
+            "p95_ms": 112.58266500080936,
+            "p99_ms": 152.3121430387248,
+            "max_ms": 337.74370001628995,
+            "fps": 11.76143444064735,
+            "jitter_std_ms": 25.746991284016183,
+            "realtime_budget_ms": 33.333333333333336,
+            "over_budget_frames": 1088,
+            "over_budget_percent": 100.0
+          },
+          "resources": {
+            "peak_rss_bytes": 484831232,
+            "average_cpu_percent": 655.3662683823529,
+            "gpu_peak_memory_bytes": null
+          },
+          "stability": {
+            "first_half_fps": 13.61387325122138,
+            "second_half_fps": 10.352738072772043,
+            "fps_drift_percent": -23.954499342475962,
+            "memory_growth_bytes": 5152768,
+            "duration_s": 93.25003009999637
+          },
+          "draw_enabled": true,
+          "write_enabled": false,
+          "batch_size": 1
+        }
+      }
+    ],
+    "artifacts": {
+      "csv": "benchmarks\\results\\artifacts\\system_sweep.csv",
+      "chart": "benchmarks\\results\\artifacts\\system_sweep.png"
+    },
+    "notes": {
+      "batch_size": 1,
+      "detection_count_buckets": "0-4, 5-9, and 10+ detections per frame",
+      "stability_duration_minutes": 2.0,
+      "model_s_included": false
+    }
+  }
+}

@@ -155,6 +155,7 @@ class YoloDetector(BaseDetector):
             iou=self.config.iou_threshold,
             imgsz=self.config.imgsz,
             device=self.device,
+            rect=False,
             verbose=False,
         )
         detections: list[Detection] = []
@@ -185,6 +186,33 @@ class YoloDetector(BaseDetector):
                     )
                 )
         return detections
+
+    def raw_output(self, frame: NDArray[Any]) -> NDArray[Any]:
+        """Return the model's pre-NMS tensor for ONNX parity validation."""
+        try:
+            torch = importlib.import_module("torch")
+        except ImportError as error:
+            raise ImportError(
+                "Raw PyTorch output requires the detection extra "
+                "(`pip install -e '.[export]'`)."
+            ) from error
+        from vision_pipeline.optimization.preprocess import letterbox
+
+        model = self._model.model
+        parameter = next(model.parameters())
+        tensor, _ = letterbox(
+            frame,
+            self.config.imgsz,
+            dtype=np.dtype(np.float32),
+        )
+        input_tensor = torch.from_numpy(tensor).to(parameter.device)
+        with torch.inference_mode():
+            output = model(input_tensor)
+        candidates = output if isinstance(output, (tuple, list)) else (output,)
+        for candidate in candidates:
+            if isinstance(candidate, torch.Tensor) and candidate.ndim == 3:
+                return np.asarray(candidate.detach().float().cpu().numpy())
+        raise ValueError("PyTorch model did not return a rank-three raw output tensor")
 
     def warmup(self) -> None:
         """Run one inference on a black image matching the configured size."""

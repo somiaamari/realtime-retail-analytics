@@ -10,3 +10,11 @@ end_to_end_p95_ms:
   metric: performance.metrics.end_to_end.p95_ms
   operator: "<="
   value: 50
+optimization_accuracy:
+  baseline_map50: 0.939
+  max_map50_drop: 0.010
+  max_map50_95_drop: 0.015
+  max_idf1_drop: 0.020
+  max_line_count_error_increase_percent: 1.0
+  fp16_map50_ideal_drop: 0.002
+  fp16_map50_failure_drop: 0.005

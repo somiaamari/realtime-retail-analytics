@@ -19,9 +19,26 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.8",
+    "types-PyYAML>=6.0",
+]
 detection = [
     "torch>=2.0",
     "ultralytics>=8.2",
+]
+onnx = [
+    "onnx>=1.15",
+    "onnxruntime>=1.17",
+    "onnxsim>=0.4.36",
+    "onnxconverter-common>=1.14",
+]
+export = [
+    "ultralytics>=8.2",
+    "torch>=2.0",
 ]
 tracking-ref = [
     "supervision>=0.22",
@@ -72,4 +89,5 @@ addopts = "-ra"
 markers = [
     "requires_detection: tests requiring the optional Ultralytics detection extra",
     "requires_eval: tests requiring motmetrics from the optional evaluation extra",
+    "requires_onnx: tests requiring the optional ONNX CPU extra",
 ]

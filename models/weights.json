@@ -1,0 +1,60 @@
+{
+  "models": {
+    "conv": {
+      "artifacts": {
+        "onnx_int8": {
+          "filename": "conv_int8.onnx",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/conv_int8.onnx",
+          "sha256": "8cfaa86cd6dc56d8fe8efbd934437e829540690b045e61c4496a7cee78ad51ca"
+        }
+      },
+      "source_weights": {
+        "filename": "conv.onnx",
+        "sha256": "8391b7da30a8a26c4e746db01a4faf91f0304dd6d783b65b0eb1996564ab5e03"
+      }
+    },
+    "identity": {
+      "artifacts": {
+        "onnx_fp16": {
+          "filename": "identity_fp16.onnx",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/identity_fp16.onnx",
+          "sha256": "e041161c07a874647bb5d981da9799e25d39d9cd29318ddb82d27d3c6bdabc24"
+        }
+      },
+      "source_weights": {
+        "filename": "identity.onnx",
+        "sha256": "4378f3c178cbad0df172928352609e4e2c0480733c505cc56adea4c73040d703"
+      }
+    },
+    "retail_people_clean": {
+      "artifacts": {
+        "onnx_fp16": {
+          "filename": "retail_people_clean_fp16.onnx",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/retail_people_clean_fp16.onnx",
+          "sha256": "61fd31d69289b1702831d3a0714407fbc5d3452bba3512b98e086d04be532df7"
+        },
+        "onnx_fp32": {
+          "filename": "retail_people_clean.onnx",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/retail_people_clean.onnx",
+          "sha256": "f4d1c42cac7cd87b79d22bb51329f0a9e0e4360b59cdc687ecd0611dfc1cb7f8"
+        },
+        "onnx_int8": {
+          "filename": "retail_people_clean_int8.onnx",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/retail_people_clean_int8.onnx",
+          "sha256": "b05fb7757d9b67cdd8c9a5c253cad95a3e8253b7970fb946d54a2c269b4fe1e8"
+        },
+        "tensorrt_fp16": {
+          "filename": "retail_people_clean.engine",
+          "release_url": "https://github.com/somiaamari/realtime-retail-analytics/releases/latest/download/retail_people_clean.engine",
+          "sha256": "15792cf4d325222ba9250bbeb8e72ef69a3b234dd5910f346921ea4e6c574e594"
+        }
+      },
+      "source_weights": {
+        "filename": "retail_people_clean.pt",
+        "sha256": "87eb82d32da3456032eba874fa5909e7eba0af1969efb35a4b33aa6b88da34a0"
+      }
+    }
+  },
+  "repository": "somiaamari/realtime-retail-analytics",
+  "schema_version": 1
+}

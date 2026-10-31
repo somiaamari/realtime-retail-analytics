@@ -1,0 +1,2 @@
+model,imgsz,device,draw,write,fps,mean_ms,p95_ms
+n,640,auto,True,False,11.76143444064735,85.02364274071999,112.58266500080936

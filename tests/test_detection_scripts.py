@@ -65,7 +65,7 @@ def test_detection_cli_writes_annotated_video(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The detection CLI processes synthetic frames with an injected fake model."""
-    monkeypatch.setattr(run_detection, "YoloDetector", StubDetector)
+    monkeypatch.setattr(run_detection, "create_detector", StubDetector)
     monkeypatch.setattr(run_detection, "VideoWriter", MjpegVideoWriter)
     output = tmp_path / "detected.avi"
     args = run_detection.build_parser().parse_args(
