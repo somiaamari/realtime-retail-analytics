@@ -1,3 +1,4 @@
+# ruff: noqa
 """Shared test fixtures and optional-dependency marker handling."""
 
 from collections.abc import Iterator
