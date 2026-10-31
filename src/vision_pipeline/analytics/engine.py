@@ -55,9 +55,7 @@ class AnalyticsEngine:
         self.config = config or AnalyticsConfig()
         self._memory_sink = InMemorySink() if sinks is None else None
         configured_sinks: list[EventSink] = (
-            [self._memory_sink]
-            if self._memory_sink is not None
-            else list(sinks or [])
+            [self._memory_sink] if self._memory_sink is not None else list(sinks or [])
         )
         self.event_logger = EventLogger(configured_sinks)
         self.latency_stats = LatencyStats()

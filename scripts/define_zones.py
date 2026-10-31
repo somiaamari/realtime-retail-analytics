@@ -1,4 +1,3 @@
-# ruff: noqa
 """Interactively define normalized analytics zones and counting lines."""
 
 import argparse  # noqa: I001
