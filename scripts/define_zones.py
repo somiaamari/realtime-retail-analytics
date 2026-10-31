@@ -11,7 +11,6 @@ import numpy as np
 import yaml
 from numpy.typing import NDArray
 from vision_pipeline.analytics.geometry import load_zones
-
 from vision_pipeline.logging_utils import setup_logging
 
 ZONE_TYPES = ("generic", "queue", "shelf", "entrance_area")
