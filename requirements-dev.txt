@@ -5,3 +5,5 @@ ruff==0.16.10
 mypy>=1.8
 pre-commit>=3.6
 types-PyYAML>=6.0
+matplotlib
+

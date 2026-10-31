@@ -143,7 +143,7 @@ class HeatmapAccumulator:
             return result
         scaled = np.clip(self.grid / upper, 0.0, 1.0) * 255.0
         result[:] = np.rint(scaled)
-        return result
+        return result  # type: ignore[no-any-return]
 
     def render(
         self,
@@ -175,7 +175,7 @@ class HeatmapAccumulator:
                 0,
             )
             result[mask] = blended[mask]
-        return result
+        return result  # type: ignore[no-any-return]
 
     def export_png(
         self,
