@@ -1,6 +1,6 @@
 """Interactively define normalized analytics zones and counting lines."""
 
-import argparse
+import argparse  # noqa: I001
 import re
 import sys
 from pathlib import Path
