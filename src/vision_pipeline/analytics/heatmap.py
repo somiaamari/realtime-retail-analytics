@@ -65,7 +65,7 @@ class HeatmapAccumulator:
         x_grid, y_grid = np.meshgrid(coordinates, coordinates)
         kernel = np.exp(-(x_grid * x_grid + y_grid * y_grid) / (2 * sigma * sigma))
         kernel /= float(kernel.sum())
-        return kernel.astype(np.float32)
+        return kernel.astype(np.float32)  # type: ignore[no-any-return, unused-ignore]
 
     def add(
         self,
@@ -143,7 +143,7 @@ class HeatmapAccumulator:
             return result
         scaled = np.clip(self.grid / upper, 0.0, 1.0) * 255.0
         result[:] = np.rint(scaled)
-        return result  # type: ignore[no-any-return]
+        return result  # type: ignore[no-any-return, unused-ignore]
 
     def render(
         self,
@@ -175,7 +175,7 @@ class HeatmapAccumulator:
                 0,
             )
             result[mask] = blended[mask]
-        return result  # type: ignore[no-any-return]
+        return result  # type: ignore[no-any-return, unused-ignore]
 
     def export_png(
         self,
