@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
+_LOG_FORMAT = "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s"
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 

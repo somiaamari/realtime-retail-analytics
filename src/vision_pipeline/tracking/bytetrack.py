@@ -59,6 +59,54 @@ class ByteTracker(BaseTracker):
         self._last_frame_id: int | None = None
         self.stats.reset()
 
+    def predict_only(self, frame_id: int) -> list[Track]:
+        """Advance existing tracks without applying any new detections."""
+        if self._last_frame_id is not None and frame_id <= self._last_frame_id:
+            raise ValueError("frame_id must increase on every tracker update")
+        frame_delta = (
+            1 if self._last_frame_id is None else frame_id - self._last_frame_id
+        )
+        self._last_frame_id = frame_id
+
+        for track in self._tracks:
+            if track.state is TrackState.REMOVED:
+                continue
+            track.reidentified = False
+            track.age += frame_delta
+            track.time_since_update += frame_delta
+            mean, covariance = self._states[track.track_id]
+            for _ in range(frame_delta):
+                mean, covariance = self._kalman.predict(mean, covariance)
+            self._states[track.track_id] = (mean, covariance)
+            track.bbox_xyxy = _state_box(mean)
+            if (
+                track.state is TrackState.LOST
+                and track.time_since_update > self.config.track_buffer
+            ):
+                track.state = TrackState.REMOVED
+                self._states.pop(track.track_id, None)
+            elif track.state is TrackState.TENTATIVE:
+                track.state = TrackState.REMOVED
+                self._states.pop(track.track_id, None)
+            elif track.state is TrackState.TRACKED:
+                track.state = TrackState.LOST
+            if track.state is TrackState.LOST and track.history is not None:
+                track.history.append(track.bottom_center)
+
+        self._tracks = [
+            track for track in self._tracks if track.state is not TrackState.REMOVED
+        ]
+        self.stats.update(self._tracks)
+        return [
+            track
+            for track in self._tracks
+            if (
+                track.state in (TrackState.TRACKED, TrackState.LOST)
+                and track.hits >= self.config.min_hits
+                and track.time_since_update <= self.config.track_buffer
+            )
+        ]
+
     def update(self, detections: list[Detection], frame_id: int) -> list[Track]:
         """Associate detections with existing tracks and return confirmed tracks.
 

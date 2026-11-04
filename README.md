@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
-A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, ONNX/TensorRT optimization, and a FastAPI/React dashboard. Phases 1-7 established the Python package, detection, tracking, analytics, fine-tuning, evaluation, and model optimization.
+A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, ONNX/TensorRT optimization, and a FastAPI/React dashboard. Phases 1-8 established the Python package, detection, tracking, analytics, fine-tuning, evaluation, model optimization, and a concurrent real-time streaming pipeline.
 
 **Phase 7 Performance Comparison:**
 By utilizing ONNX Runtime and TensorRT, we achieved a **12x speedup** over the PyTorch CPU baseline, enabling real-time inference at **183 FPS** on an NVIDIA T4 GPU.
@@ -40,7 +40,7 @@ flowchart LR
 - [x] Phase 5: Dataset & fine-tuning
 - [x] Phase 6: Evaluation & benchmarking
 - [x] Phase 7: Model optimization (ONNX/TensorRT)
-- [ ] Phase 8: Real-time streaming pipeline
+- [x] Phase 8: Real-time streaming pipeline
 - [ ] Phase 9: Backend API
 - [ ] Phase 10: Dashboard
 - [ ] Phase 11: Docker/tests/CI-CD
@@ -69,6 +69,45 @@ The pipeline includes a unified evaluation harness to measure tracking accuracy 
 | **Throughput (FPS)** | **11.76 FPS** (CPU inference) |
 
 **Performance Bottleneck:** System profiling indicates the YOLO detection stage consumes the majority of the latency (mean 75.8 ms, p95 98.4 ms) when running on CPU. This establishes a clear baseline for Phase 7 (ONNX/TensorRT optimization).
+
+## Real-Time Streaming Pipeline (Phase 8)
+
+The threaded pipeline separates capture, inference, tracking/analytics, and output behind bounded queues:
+
+```mermaid
+flowchart LR
+    A[Capture Thread] -->|Bounded Q1| B[Inference Thread]
+    B -->|Bounded Q2| C[Tracking & Analytics Thread]
+    C -->|Bounded Q3| D[Output Sinks]
+```
+
+Live streams use bounded queues with a `DROP_OLDEST` policy to maintain bounded latency under heavy load. An adaptive stride controller skips detection frames when the system is bottlenecked while continuing tracking and analytics updates. Threads suit native OpenCV/ONNX work that releases the GIL; multiprocessing may help Python-heavy workloads but requires process-safe queues, frame serialization, and separate model lifecycle management.
+
+Set `video.low_latency: true` to request a one-frame OpenCV capture buffer where the selected backend supports it; RTSP deployments may also configure FFmpeg transport options in their environment.
+
+### Streaming benchmark results
+
+| Mode | Throughput (FPS) | p95 End-to-End Latency (ms) | Frames Dropped | Notes |
+|---|---:|---:|---:|---|
+| Sync | 4.35 | N/A | N/A | Intel CPU, ONNX |
+| Threaded | 4.98 | 1656 | 0 | Intel CPU, ONNX |
+| Adaptive | 25.69 | 421 | 0 | Intel CPU, ONNX; final stride 8 |
+
+On constrained hardware (CPU only), the adaptive controller successfully increased the detection stride to maintain 25+ FPS and bounded latency under load.
+
+Run the streaming pipeline on a video file, camera, or RTSP source:
+
+```shell
+python scripts/run_live.py --source data/raw/vid.mp4 --realtime --backend onnx
+```
+
+Compare synchronous, threaded, and adaptive modes with:
+
+```shell
+python scripts/benchmark_streaming.py --source data/raw/vid.mp4
+```
+
+For integration, `vision_pipeline.streaming.engine.StreamingPipeline` exposes thread-safe `get_latest_frame()`, `wait_for_frame(version, timeout)`, `subscribe_events(callback_or_queue)`, `get_snapshot()`, `get_metrics()`, and `get_health()` methods. Each instance accepts a `stream_id`; the current implementation uses threads, while process-based execution remains a future option for Python-heavy workloads.
 
 ## Quickstart
 
@@ -113,3 +152,4 @@ source without keeping an annotated output, run
 - [Phase 5: Fine-Tuning](docs/phase-05-finetuning.md)
 - [Phase 6: Evaluation & Benchmarking](docs/phase-06-evaluation.md)
 - [Phase 7: Model Optimization](docs/phase-07-optimization.md)
+- [Phase 8: Streaming Pipeline](docs/phase-08-streaming.md)

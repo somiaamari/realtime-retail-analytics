@@ -1,7 +1,7 @@
 """Core types shared by video ingestion and object detection."""
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
 
@@ -23,6 +23,9 @@ class FrameData:
     frame_id: int
     timestamp_s: float
     source_fps: float
+    stream_id: str = "default"
+    capture_ts: float | None = None
+    stage_timestamps: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

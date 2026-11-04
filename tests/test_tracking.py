@@ -128,6 +128,23 @@ def test_bytetrack_reidentifies_lost_track_without_double_counting() -> None:
     assert tracker.stats.reidentifications == 1
 
 
+def test_bytetrack_predict_only_keeps_ids_until_detection_returns() -> None:
+    """Skipped detector frames expose predicted tracks and later retain identity."""
+    tracker = ByteTracker(TrackerConfig(track_buffer=2, min_hits=1))
+    tracked = tracker.update([detection(10)], 0)
+
+    predicted = tracker.predict_only(1)
+    assert [track.track_id for track in predicted] == [1]
+    assert predicted[0].state is TrackState.LOST
+    assert predicted[0].time_since_update == 1
+
+    tracker.predict_only(2)
+    assert [track.track_id for track in tracker.update([detection(13)], 3)] == [1]
+    assert tracker.stats.total_unique_ids == 1
+    assert tracker.stats.reidentifications == 1
+    assert tracked[0].track_id == 1
+
+
 def test_bytetrack_filters_small_boxes_and_separates_classes() -> None:
     """Small boxes are discarded and distinct classes cannot share an ID."""
     tracker = ByteTracker(TrackerConfig(min_box_area=100, min_hits=1))

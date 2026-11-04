@@ -28,6 +28,7 @@ class VideoConfig(StrictConfigModel):
     height: int = Field(default=1080, gt=0)
     fps: Annotated[float, Field(gt=0)] = 30.0
     resize: bool = False
+    low_latency: bool = False
     max_retries: int = Field(default=5, ge=0)
     reconnect_delay_s: Annotated[float, Field(ge=0.0)] = 1.0
 

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import random
+import threading
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
@@ -18,6 +21,25 @@ from vision_pipeline.logging_utils import get_logger
 from vision_pipeline.types import FrameData
 
 logger = get_logger(__name__)
+_FFMPEG_OPTIONS_LOCK = threading.Lock()
+_LOW_LATENCY_FFMPEG_OPTIONS = "rtsp_transport;udp|fflags;nobuffer|flags;low_delay"
+
+
+def _create_cv_capture(
+    source: str | int,
+    *,
+    low_latency: bool = False,
+) -> cv2.VideoCapture:
+    """Create a capture handle while safely scoping optional FFmpeg settings."""
+    with _FFMPEG_OPTIONS_LOCK:
+        previous = os.environ.get("OPENCV_FFMPEG_CAPTURE_OPTIONS")
+        if low_latency and not previous:
+            os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = _LOW_LATENCY_FFMPEG_OPTIONS
+        try:
+            return cv2.VideoCapture(source)
+        finally:
+            if low_latency and not previous:
+                os.environ.pop("OPENCV_FFMPEG_CAPTURE_OPTIONS", None)
 
 
 class VideoSourceError(RuntimeError):
@@ -110,6 +132,10 @@ class _CaptureVideoSource(VideoSource):
         if not capture.isOpened():
             capture.release()
             raise VideoSourceError(f"Unable to open video source: {self!s}")
+        if self.config.low_latency:
+            set_property = getattr(capture, "set", None)
+            if callable(set_property):
+                set_property(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._capture = capture
         source_fps = float(capture.get(cv2.CAP_PROP_FPS))
         if np.isfinite(source_fps) and source_fps > 0:
@@ -233,7 +259,7 @@ class FileVideoSource(_CaptureVideoSource):
     def _open_capture(self) -> cv2.VideoCapture:
         if not self.path.is_file():
             raise VideoSourceError(f"Video file does not exist: {self.path}")
-        return cv2.VideoCapture(str(self.path))
+        return _create_cv_capture(str(self.path))
 
     def __str__(self) -> str:
         """Return the source path for logs and errors."""
@@ -254,7 +280,7 @@ class WebcamSource(_CaptureVideoSource):
         self.device_index = device_index
 
     def _open_capture(self) -> cv2.VideoCapture:
-        return cv2.VideoCapture(self.device_index)
+        return _create_cv_capture(self.device_index)
 
     @property
     def frame_count(self) -> None:
@@ -290,6 +316,8 @@ class RTSPSource(_CaptureVideoSource):
             if reconnect_delay_s is None
             else reconnect_delay_s
         )
+        self.reconnecting = False
+        self.reconnect_count = 0
         if self.max_retries < 0 or self.reconnect_delay_s < 0:
             raise ValueError("Retry count and reconnect delay must be non-negative.")
 
@@ -297,14 +325,16 @@ class RTSPSource(_CaptureVideoSource):
         last_error: cv2.error | None = None
         for attempt in range(self.max_retries + 1):
             try:
-                capture = cv2.VideoCapture(self.url)
+                capture = self._create_capture()
             except cv2.error as error:
                 last_error = error
                 capture = None
             if capture is not None and capture.isOpened():
+                self.reconnecting = False
                 return capture
             if capture is not None:
                 capture.release()
+            self._mark_reconnecting()
             if attempt < self.max_retries:
                 delay = self.reconnect_delay_s * (2**attempt)
                 logger.warning(
@@ -322,6 +352,10 @@ class RTSPSource(_CaptureVideoSource):
             raise source_error from last_error
         raise source_error
 
+    def _create_capture(self) -> cv2.VideoCapture:
+        """Create an RTSP capture with optional low-latency FFmpeg options."""
+        return _create_cv_capture(self.url, low_latency=self.config.low_latency)
+
     def read(self) -> FrameData | None:
         """Read a frame, reconnecting after a failed live-stream read."""
         for attempt in range(self.max_retries + 1):
@@ -329,12 +363,15 @@ class RTSPSource(_CaptureVideoSource):
                 frame = super().read()
             except VideoSourceError:
                 self.release()
+                self._mark_reconnecting()
                 if attempt >= self.max_retries:
                     raise
                 frame = None
             if frame is not None:
+                self.reconnecting = False
                 return frame
             self.release()
+            self._mark_reconnecting()
             if attempt < self.max_retries:
                 delay = self.reconnect_delay_s * (2**attempt)
                 logger.warning("RTSP read failed; reconnecting in %.2f seconds", delay)
@@ -347,6 +384,12 @@ class RTSPSource(_CaptureVideoSource):
             f"{self.url}"
         )
 
+    def _mark_reconnecting(self) -> None:
+        """Track an RTSP disconnect episode for health and metrics."""
+        if not self.reconnecting:
+            self.reconnecting = True
+            self.reconnect_count += 1
+
     @property
     def frame_count(self) -> None:
         """Live RTSP sources have no known frame count."""
@@ -357,6 +400,141 @@ class RTSPSource(_CaptureVideoSource):
         parsed = urlsplit(self.url)
         netloc = parsed.netloc.rsplit("@", maxsplit=1)[-1]
         return urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
+
+
+class FakeSource(VideoSource):
+    """Synthetic source with deterministic timing for tests and demos."""
+
+    def __init__(
+        self,
+        *,
+        frames: list[FrameData] | None = None,
+        fps: float = 10.0,
+        width: int = 64,
+        height: int = 48,
+        infinite: bool = False,
+        frame_generator: Any | None = None,
+        jitter: float = 0.0,
+        burst: int = 0,
+        dropout_windows: list[tuple[float, float]] | None = None,
+        clock: Any | None = None,
+    ) -> None:
+        self._frames = list(frames or [])
+        self._fps = float(fps)
+        self._width = int(width)
+        self._height = int(height)
+        self._infinite = infinite
+        self._frame_generator = frame_generator
+        self._jitter = float(jitter)
+        self._burst = max(0, int(burst))
+        self._dropout_windows = list(dropout_windows or [])
+        self._clock = clock
+        self._index = 0
+        self._frame_id = 0
+        self._time = 0.0
+        self._random = random.Random(0)
+        self._stop_event = threading.Event()
+
+    def open(self) -> None:
+        """Reset the fake source so it can be iterated from the start."""
+        self._index = 0
+        self._frame_id = 0
+        self._time = self._clock.monotonic() if self._clock is not None else 0.0
+        self._random.seed(0)
+        self._stop_event.clear()
+
+    def read(self) -> FrameData | None:
+        """Return the next synthetic frame or signal EOF for finite sources."""
+        if self._frame_generator is not None:
+            generated = self._frame_generator(self._frame_id)
+            if generated is None:
+                return None
+            if isinstance(generated, FrameData):
+                result = generated
+            else:
+                result = FrameData(
+                    frame=np.asarray(generated, dtype=np.uint8),
+                    frame_id=self._frame_id,
+                    timestamp_s=self._time,
+                    source_fps=self._fps,
+                )
+            self._frame_id += 1
+            self._time += 1.0 / self._fps
+            return result
+
+        if self._infinite:
+            interval = max(
+                0.0,
+                1.0 / self._fps + self._random.uniform(-self._jitter, self._jitter),
+            )
+            if self._burst > 1:
+                interval = (
+                    interval * self._burst if self._frame_id % self._burst == 0 else 0.0
+                )
+            if self._clock is not None:
+                self._clock.sleep(interval)
+                self._time = self._clock.monotonic()
+            else:
+                if self._stop_event.wait(interval):
+                    return None
+                self._time += interval
+            if self._dropout_windows:
+                for start, end in self._dropout_windows:
+                    if start <= self._time < end:
+                        return None
+            frame = np.zeros((self._height, self._width, 3), dtype=np.uint8)
+            if self._burst > 1 and self._frame_id % self._burst == 0:
+                frame[...] = 255
+            data = FrameData(
+                frame=frame,
+                frame_id=self._frame_id,
+                timestamp_s=self._time,
+                source_fps=self._fps,
+            )
+            self._frame_id += 1
+            return data
+
+        if self._index >= len(self._frames):
+            return None
+        source_frame = self._frames[self._index]
+        self._index += 1
+        self._frame_id = source_frame.frame_id + 1
+        return FrameData(
+            frame=np.asarray(source_frame.frame, dtype=np.uint8),
+            frame_id=source_frame.frame_id,
+            timestamp_s=source_frame.timestamp_s,
+            source_fps=source_frame.source_fps,
+        )
+
+    def release(self) -> None:
+        """Release the fake source; there are no external resources to clean up."""
+        self._stop_event.set()
+
+    @property
+    def fps(self) -> float:
+        """Return the configured nominal fake-source frame rate."""
+        return self._fps
+
+    @property
+    def width(self) -> int:
+        """Return the configured synthetic frame width."""
+        return self._width
+
+    @property
+    def height(self) -> int:
+        """Return the configured synthetic frame height."""
+        return self._height
+
+    @property
+    def frame_count(self) -> int | None:
+        """Return the finite frame count for non-infinite fake sources."""
+        if self._infinite:
+            return None
+        return len(self._frames)
+
+    def __str__(self) -> str:
+        """Return a readable fake-source identifier."""
+        return "fake-source"
 
 
 def create_source(config: VideoConfig) -> VideoSource:

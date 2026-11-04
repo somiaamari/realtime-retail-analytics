@@ -1,5 +1,6 @@
 """Tests for local and factory-created video sources."""
 
+import os
 from pathlib import Path
 
 import cv2
@@ -164,6 +165,32 @@ def test_rtsp_source_redacts_credentials_and_query_from_display() -> None:
     source = RTSPSource("rtsp://user:secret@camera.local:8554/live?token=private")
 
     assert str(source) == "rtsp://camera.local:8554/live"
+
+
+def test_rtsp_low_latency_option_is_scoped_to_capture_open(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Low-latency FFmpeg options are temporary and do not mutate process state."""
+    capture = StubCapture(True, [])
+    observed: list[str | None] = []
+
+    def create_capture(_url: str) -> StubCapture:
+        observed.append(os.environ.get("OPENCV_FFMPEG_CAPTURE_OPTIONS"))
+        return capture
+
+    monkeypatch.delenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", raising=False)
+    monkeypatch.setattr(
+        "vision_pipeline.streaming.sources.cv2.VideoCapture", create_capture
+    )
+    source = RTSPSource(
+        "rtsp://camera/stream",
+        VideoConfig(source="rtsp://camera/stream", low_latency=True),
+        max_retries=0,
+    )
+    source.open()
+    assert observed == ["rtsp_transport;udp|fflags;nobuffer|flags;low_delay"]
+    assert "OPENCV_FFMPEG_CAPTURE_OPTIONS" not in os.environ
+    source.release()
 
 
 def test_rtsp_open_exhaustion_and_corrupt_webcam_frame(
