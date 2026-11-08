@@ -30,9 +30,7 @@ class EventRepository:
         if cursor is not None:
             query = query.where(EventRecord.id > cursor)
         return list(
-            self.session.scalars(
-                query.order_by(EventRecord.id).limit(limit)
-            ).all()  # type: ignore[arg-type]
+            self.session.scalars(query.order_by(EventRecord.id).limit(limit)).all()  # type: ignore[arg-type]
         )
 
 
