@@ -1,4 +1,6 @@
-# API placeholder
+# Backend API
 
-The FastAPI backend is planned for Phase 9. This directory is reserved for the
-future API application and contains no backend implementation yet.
+The API implementation is in the installable package at
+[`src/vision_pipeline/api/`](../src/vision_pipeline/api/). Install it with
+`python -m pip install -e ".[api,api-dev]"`. See
+[`docs/phase-09-api.md`](../docs/phase-09-api.md) for setup and endpoints.

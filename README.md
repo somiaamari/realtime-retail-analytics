@@ -41,7 +41,7 @@ flowchart LR
 - [x] Phase 6: Evaluation & benchmarking
 - [x] Phase 7: Model optimization (ONNX/TensorRT)
 - [x] Phase 8: Real-time streaming pipeline
-- [ ] Phase 9: Backend API
+- [x] Phase 9: Backend API
 - [ ] Phase 10: Dashboard
 - [ ] Phase 11: Docker/tests/CI-CD
 - [ ] Phase 12: Docs/demo/release
@@ -109,6 +109,24 @@ python scripts/benchmark_streaming.py --source data/raw/vid.mp4
 
 For integration, `vision_pipeline.streaming.engine.StreamingPipeline` exposes thread-safe `get_latest_frame()`, `wait_for_frame(version, timeout)`, `subscribe_events(callback_or_queue)`, `get_snapshot()`, `get_metrics()`, and `get_health()` methods. Each instance accepts a `stream_id`; the current implementation uses threads, while process-based execution remains a future option for Python-heavy workloads.
 
+## Backend API (Phase 9)
+
+Install the optional API dependencies and run a no-model synthetic demo:
+
+```shell
+python -m pip install -e ".[api,api-dev]"
+```
+
+Set `API_DEMO_MODE=true` in `.env`, then run `python scripts/run_api.py`.
+The service provides stream lifecycle management, MJPEG video, WebSocket live
+updates, and historical analytics backed by SQLite or PostgreSQL. API routes
+are documented at `/docs`; migrations are run with `make migrate`. Privacy is
+designed in: only anonymous events and coarse aggregates are stored, and
+configured retention removes historical records. See
+[Phase 9 API documentation](docs/phase-09-api.md).
+*To view the live MJPEG video feed in a browser, you can embed the `/video`
+endpoint in a simple HTML `<img>` tag.*
+
 ## Quickstart
 
 ```shell
@@ -153,3 +171,5 @@ source without keeping an annotated output, run
 - [Phase 6: Evaluation & Benchmarking](docs/phase-06-evaluation.md)
 - [Phase 7: Model Optimization](docs/phase-07-optimization.md)
 - [Phase 8: Streaming Pipeline](docs/phase-08-streaming.md)
+- [Phase 9: Backend API](docs/phase-09-api.md)
+- [WebSocket Protocol](docs/websocket.md)

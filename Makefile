@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test benchmark sweep clean
+.PHONY: install lint format typecheck test benchmark sweep clean api migrate seed openapi
 
 install:
 	python -m pip install -r requirements-dev.txt
@@ -21,6 +21,18 @@ benchmark:
 
 sweep:
 	python scripts/sweep_tracker.py --config configs/eval.yaml --workers 1
+
+api:
+	python scripts/run_api.py
+
+migrate:
+	alembic -c alembic.ini upgrade head
+
+seed:
+	python scripts/seed_demo_data.py
+
+openapi:
+	python scripts/export_openapi.py
 
 clean:
 	python -c "import pathlib, shutil; [shutil.rmtree(path, ignore_errors=True) for path in ('.pytest_cache', '.mypy_cache', '.ruff_cache', 'build', 'dist')]; [path.unlink(missing_ok=True) for path in pathlib.Path('.').glob('.coverage*')]"
