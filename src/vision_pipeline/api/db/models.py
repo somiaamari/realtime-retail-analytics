@@ -36,7 +36,9 @@ class Stream(Base):
     source: Mapped[str] = mapped_column(Text)
     config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     autostart: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
@@ -52,7 +54,9 @@ class Run(Base):
     stream_id: Mapped[str] = mapped_column(
         ForeignKey("streams.stream_id", ondelete="CASCADE"), index=True
     )
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
     stopped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(32), default="starting")
     stream: Mapped[Stream] = relationship(back_populates="runs")
@@ -69,7 +73,9 @@ class EventRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     stream_id: Mapped[str] = mapped_column(String(128), index=True)
-    run_id: Mapped[int | None] = mapped_column(ForeignKey("runs.id", ondelete="SET NULL"))
+    run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("runs.id", ondelete="SET NULL")
+    )
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     timestamp_s: Mapped[float] = mapped_column(Float)
     frame_id: Mapped[int] = mapped_column(Integer)

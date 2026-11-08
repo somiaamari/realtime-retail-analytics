@@ -115,9 +115,7 @@ class StreamManager:
             analytics_config = AnalyticsConfig.model_validate(
                 {"zones": zones, "lines": config.lines}
             )
-            detector = FakeDetector(
-                [Detection((120, 80, 190, 210), 0.95, 0, "person")]
-            )
+            detector = FakeDetector([Detection((120, 80, 190, 210), 0.95, 0, "person")])
             tracker_config = None
         else:
             app_config = load_config(self.config_path)

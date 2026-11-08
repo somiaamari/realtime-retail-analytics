@@ -42,7 +42,9 @@ def synthetic_records(
                 }
 
 
-def synthetic_heatmap(seed: int = 17, width: int = 32, height: int = 24) -> list[list[float]]:
+def synthetic_heatmap(
+    seed: int = 17, width: int = 32, height: int = 24
+) -> list[list[float]]:
     """Return a seeded, coarse spatial density grid."""
     randomizer = random.Random(seed)
     return [
@@ -51,7 +53,8 @@ def synthetic_heatmap(seed: int = 17, width: int = 32, height: int = 24) -> list
                 max(
                     0.0,
                     randomizer.random()
-                    + 2.0 * (1.0 - abs(column - width * 0.55) / width)
+                    + 2.0
+                    * (1.0 - abs(column - width * 0.55) / width)
                     * (1.0 - abs(row - height * 0.65) / height),
                 ),
                 3,

@@ -106,7 +106,9 @@ class PersistenceWorker:
                 except Exception:
                     with self._lock:
                         self._metrics["failures"] += 1
-                    logger.exception("Persisting analytics batch failed (attempt %d)", attempt + 1)
+                    logger.exception(
+                        "Persisting analytics batch failed (attempt %d)", attempt + 1
+                    )
                     if attempt < 3:
                         time.sleep(0.1 * (2**attempt))
                     else:

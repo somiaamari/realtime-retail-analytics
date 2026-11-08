@@ -87,5 +87,7 @@ def export_events(
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{stream_id}-events.csv"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{stream_id}-events.csv"'
+        },
     )

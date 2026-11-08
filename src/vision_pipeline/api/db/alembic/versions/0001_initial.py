@@ -78,8 +78,22 @@ def upgrade() -> None:
         "ix_bucket_stream_start", "bucket_stats", ["stream_id", "bucket_start"]
     )
     for table, columns in (
-        ("zones", [("zone_id", sa.String(128)), ("name", sa.String(200)), ("geometry", sa.JSON())]),
-        ("lines", [("line_id", sa.String(128)), ("name", sa.String(200)), ("geometry", sa.JSON())]),
+        (
+            "zones",
+            [
+                ("zone_id", sa.String(128)),
+                ("name", sa.String(200)),
+                ("geometry", sa.JSON()),
+            ],
+        ),
+        (
+            "lines",
+            [
+                ("line_id", sa.String(128)),
+                ("name", sa.String(200)),
+                ("geometry", sa.JSON()),
+            ],
+        ),
     ):
         op.create_table(
             table,
@@ -97,7 +111,9 @@ def upgrade() -> None:
         sa.Column("height", sa.Integer(), nullable=False),
         sa.Column("values", sa.JSON(), nullable=False),
     )
-    op.create_index("ix_heatmap_snapshots_stream_id", "heatmap_snapshots", ["stream_id"])
+    op.create_index(
+        "ix_heatmap_snapshots_stream_id", "heatmap_snapshots", ["stream_id"]
+    )
     op.create_index(
         "ix_heatmap_stream_ts", "heatmap_snapshots", ["stream_id", "timestamp"]
     )

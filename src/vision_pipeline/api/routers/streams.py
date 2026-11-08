@@ -111,7 +111,9 @@ def update_stream(
     return _serialize(request, payload)
 
 
-@router.delete("/{stream_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=mutating)
+@router.delete(
+    "/{stream_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=mutating
+)
 def delete_stream(
     stream_id: str,
     request: Request,
@@ -188,7 +190,10 @@ def stream_snapshot(stream_id: str, request: Request) -> dict[str, Any]:
         _get_config(request, stream_id)
         return {"stream_id": stream_id, "snapshot": None}
     snapshot = pipeline.get_snapshot()
-    return {"stream_id": stream_id, "snapshot": snapshot.to_dict() if snapshot else None}
+    return {
+        "stream_id": stream_id,
+        "snapshot": snapshot.to_dict() if snapshot else None,
+    }
 
 
 @router.get("/{stream_id}/zones")
@@ -220,9 +225,7 @@ def put_geometry(
 ) -> dict[str, list[dict[str, Any]]]:
     """Validate, persist, and apply geometry to a stopped stream."""
     config = _get_config(request, stream_id)
-    updated = config.model_copy(
-        update={"zones": payload.zones, "lines": payload.lines}
-    )
+    updated = config.model_copy(update={"zones": payload.zones, "lines": payload.lines})
     manager = request.app.state.stream_manager
     try:
         manager.update(updated)

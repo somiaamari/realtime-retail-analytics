@@ -31,9 +31,7 @@ class EventRepository:
         if cursor is not None:
             query = query.where(EventRecord.id > cursor)
         return list(
-            self.session.scalars(
-                query.order_by(EventRecord.id).limit(limit)
-            ).all()
+            self.session.scalars(query.order_by(EventRecord.id).limit(limit)).all()
         )
 
 
@@ -97,7 +95,9 @@ class StreamRepository:
 
     def list(self) -> list[Stream]:
         """List configured streams in stable ID order."""
-        return list(self.session.scalars(select(Stream).order_by(Stream.stream_id)).all())
+        return list(
+            self.session.scalars(select(Stream).order_by(Stream.stream_id)).all()
+        )
 
     def upsert(self, stream: Stream) -> Stream:
         """Insert or update stream configuration."""

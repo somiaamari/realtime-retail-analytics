@@ -20,7 +20,10 @@ from sqlalchemy.engine import Engine
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from vision_pipeline.api.db.models import Stream
-from vision_pipeline.api.db.session import create_database_engine, create_session_factory
+from vision_pipeline.api.db.session import (
+    create_database_engine,
+    create_session_factory,
+)
 from vision_pipeline.api.realtime.hub import WebSocketHub
 from vision_pipeline.api.routers import analytics, events, streams, system, video, ws
 from vision_pipeline.api.schemas.common import ErrorResponse, StreamCreate
@@ -111,7 +114,9 @@ def create_app(
                 try:
                     manager.start(definition.stream_id)
                 except Exception:
-                    logger.exception("Unable to autostart stream %s", definition.stream_id)
+                    logger.exception(
+                        "Unable to autostart stream %s", definition.stream_id
+                    )
 
         async def maintenance() -> None:
             """Run retention and aggregate flush tasks outside pipeline threads."""
@@ -172,7 +177,9 @@ def create_app(
     async def request_context(request: Request, call_next: Any) -> Any:
         """Attach/echo a request ID and write a structured access log."""
         requested = request.headers.get("X-Request-ID", "")
-        request_id = requested[:128] if requested and requested.isascii() else str(uuid.uuid4())
+        request_id = (
+            requested[:128] if requested and requested.isascii() else str(uuid.uuid4())
+        )
         request.state.request_id = request_id
         started = time.perf_counter()
         try:
@@ -201,7 +208,9 @@ def create_app(
         return response
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error(request: Request, error: RequestValidationError) -> JSONResponse:
+    async def validation_error(
+        request: Request, error: RequestValidationError
+    ) -> JSONResponse:
         payload = ErrorResponse(
             code="validation_error",
             message=str(error.errors()),
@@ -220,7 +229,9 @@ def create_app(
         return JSONResponse(status_code=500, content=payload.model_dump())
 
     @app.exception_handler(StarletteHTTPException)
-    async def http_error(request: Request, error: StarletteHTTPException) -> JSONResponse:
+    async def http_error(
+        request: Request, error: StarletteHTTPException
+    ) -> JSONResponse:
         detail = error.detail
         code = "not_found" if error.status_code == 404 else "http_error"
         message = str(detail)

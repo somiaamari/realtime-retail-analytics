@@ -11,7 +11,10 @@ from vision_pipeline.api.db.models import (
     HeatmapSnapshot,
     Stream,
 )
-from vision_pipeline.api.db.session import create_database_engine, create_session_factory
+from vision_pipeline.api.db.session import (
+    create_database_engine,
+    create_session_factory,
+)
 from vision_pipeline.api.services.demo import synthetic_heatmap, synthetic_records
 from vision_pipeline.api.settings import APISettings
 

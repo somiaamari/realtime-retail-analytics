@@ -30,7 +30,10 @@ def video_mjpeg(stream_id: str, request: Request) -> StreamingResponse:
         raise HTTPException(status_code=404, detail="Stream is not running.")
     guard: threading.Lock = request.app.state.mjpeg_guard
     with guard:
-        if request.app.state.mjpeg_clients >= request.app.state.settings.max_mjpeg_clients:
+        if (
+            request.app.state.mjpeg_clients
+            >= request.app.state.settings.max_mjpeg_clients
+        ):
             raise HTTPException(status_code=503, detail="MJPEG client limit reached.")
         request.app.state.mjpeg_clients += 1
 
@@ -41,14 +44,12 @@ def video_mjpeg(stream_id: str, request: Request) -> StreamingResponse:
                 frame = pipeline.wait_for_frame(version, timeout=1.0)
                 if frame is None:
                     continue
-                
+
                 version = frame.version
-                
+
                 yield (
                     b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n"
-                    + frame.jpeg
-                    + b"\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame.jpeg + b"\r\n"
                 )
         finally:
             with guard:

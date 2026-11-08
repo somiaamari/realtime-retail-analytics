@@ -19,12 +19,14 @@ def create_database_engine(database_url: str) -> Engine:
         options["connect_args"] = {"check_same_thread": False}
     engine = create_engine(database_url, **options)
     if database_url.startswith("sqlite:"):
+
         @event.listens_for(engine, "connect")
         def set_sqlite_pragmas(connection: object, _record: object) -> None:
             cursor = connection.cursor()  # type: ignore[attr-defined]
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.close()
+
     return engine
 
 

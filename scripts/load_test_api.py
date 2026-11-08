@@ -22,7 +22,9 @@ async def run_load(base_url: str, duration: float) -> None:
 
     async def mjpeg_client() -> None:
         async with httpx.AsyncClient(timeout=duration + 10) as client:
-            async with client.stream("GET", f"{base_url}/api/v1/streams/demo/video") as response:
+            async with client.stream(
+                "GET", f"{base_url}/api/v1/streams/demo/video"
+            ) as response:
                 async for chunk in response.aiter_bytes():
                     if time.monotonic() >= stop_at:
                         return

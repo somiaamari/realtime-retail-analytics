@@ -27,9 +27,7 @@ async def stream_websocket(websocket: WebSocket, stream_id: str) -> None:
         await websocket.close(code=4404, reason="Stream is not running")
         return
     try:
-        client = websocket.app.state.hub.subscribe(
-            stream_id, settings.ws_max_clients
-        )
+        client = websocket.app.state.hub.subscribe(stream_id, settings.ws_max_clients)
     except RuntimeError:
         await websocket.close(code=4429, reason="WebSocket client limit reached")
         return
@@ -43,7 +41,9 @@ async def stream_websocket(websocket: WebSocket, stream_id: str) -> None:
     try:
         while True:
             now = time.monotonic()
-            timeout = max(0.0, min(snapshot_at + 0.5, metrics_at + 1.0, heartbeat_at + 20) - now)
+            timeout = max(
+                0.0, min(snapshot_at + 0.5, metrics_at + 1.0, heartbeat_at + 20) - now
+            )
             try:
                 message: dict[str, Any] = await asyncio.wait_for(
                     client.queue.get(), timeout=timeout
@@ -64,11 +64,17 @@ async def stream_websocket(websocket: WebSocket, stream_id: str) -> None:
                 snapshot_at = now
             if now >= metrics_at + 1.0:
                 await websocket.send_json(
-                    {"type": "METRICS", "data": pipeline.get_metrics(), "timestamp": time.time()}
+                    {
+                        "type": "METRICS",
+                        "data": pipeline.get_metrics(),
+                        "timestamp": time.time(),
+                    }
                 )
                 metrics_at = now
             if now >= heartbeat_at + 20:
-                await websocket.send_json({"type": "HEARTBEAT", "timestamp": time.time()})
+                await websocket.send_json(
+                    {"type": "HEARTBEAT", "timestamp": time.time()}
+                )
                 heartbeat_at = now
     except WebSocketDisconnect:
         pass

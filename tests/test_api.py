@@ -45,9 +45,10 @@ def test_app_factory_demo_event_persistence_and_summary(tmp_path: Path) -> None:
         summary = client.get("/api/v1/streams/demo/analytics/summary").json()
         assert summary["event_count"] == len(events)
         assert summary["event_counts"].get("TRACK_STARTED", 0) >= 1
-        assert client.get("/api/v1/streams/demo/frame.jpg").headers[
-            "content-type"
-        ] == "image/jpeg"
+        assert (
+            client.get("/api/v1/streams/demo/frame.jpg").headers["content-type"]
+            == "image/jpeg"
+        )
         assert client.get("/api/v1/metrics").text.startswith("# HELP")
 
 
@@ -61,10 +62,13 @@ def test_stream_crud_api_key_and_websocket(tmp_path: Path) -> None:
         )
     )
     with TestClient(app) as client:
-        assert client.post(
-            "/api/v1/streams",
-            json={"stream_id": "extra", "source": "fake"},
-        ).status_code == 401
+        assert (
+            client.post(
+                "/api/v1/streams",
+                json={"stream_id": "extra", "source": "fake"},
+            ).status_code
+            == 401
+        )
         with client.websocket_connect("/ws/streams/demo?api_key=test-key") as socket:
             state = socket.receive_json()
             assert state["type"] == "STATE"
