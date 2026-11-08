@@ -1,6 +1,5 @@
 """System health, readiness, information, and metrics endpoints."""
 
-import json
 from typing import Any
 
 from fastapi import APIRouter, Request

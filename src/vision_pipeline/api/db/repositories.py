@@ -1,7 +1,6 @@
 """Typed database query helpers used by services and routers."""
 
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
@@ -25,13 +24,15 @@ class EventRepository:
         self, stream_id: str, *, cursor: int | None, limit: int
     ) -> list[EventRecord]:
         """Return an ascending page after an optional event ID cursor."""
-        query: Select[tuple[EventRecord]] = select(EventRecord).where(
+        query: Select[tuple[EventRecord]] = select(EventRecord).where(  # type: ignore[assignment]
             EventRecord.stream_id == stream_id
         )
         if cursor is not None:
             query = query.where(EventRecord.id > cursor)
         return list(
-            self.session.scalars(query.order_by(EventRecord.id).limit(limit)).all()
+            self.session.scalars(
+                query.order_by(EventRecord.id).limit(limit)
+            ).all()  # type: ignore[arg-type]
         )
 
 

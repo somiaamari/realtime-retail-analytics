@@ -1,7 +1,6 @@
 """Stream configuration and lifecycle endpoints."""
 
-import threading
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import delete, select
@@ -34,7 +33,7 @@ def _get_config(request: Request, stream_id: str) -> StreamCreate:
     definition = request.app.state.stream_manager.get_definition(stream_id)
     if definition is None:
         raise HTTPException(status_code=404, detail="Stream not found.")
-    return definition
+    return cast(StreamCreate, definition)
 
 
 @router.get("")
@@ -169,7 +168,7 @@ def stream_metrics(stream_id: str, request: Request) -> dict[str, Any]:
     if pipeline is None:
         _get_config(request, stream_id)
         return {"stream_id": stream_id, "status": "STOPPED"}
-    return pipeline.get_metrics()
+    return cast(dict[str, Any], pipeline.get_metrics())
 
 
 @router.get("/{stream_id}/health")
@@ -179,7 +178,7 @@ def stream_health(stream_id: str, request: Request) -> dict[str, Any]:
     if pipeline is None:
         _get_config(request, stream_id)
         return {"stream_id": stream_id, "state": "STOPPED"}
-    return pipeline.get_health()
+    return cast(dict[str, Any], pipeline.get_health())
 
 
 @router.get("/{stream_id}/snapshot")

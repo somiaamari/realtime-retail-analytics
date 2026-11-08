@@ -99,7 +99,7 @@ def upgrade() -> None:
             table,
             sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
             sa.Column("stream_id", sa.String(128), nullable=False),
-            *(sa.Column(name, kind, nullable=False) for name, kind in columns),
+            *(sa.Column(name, kind, nullable=False) for name, kind in columns),  # type: ignore[arg-type]
         )
         op.create_index(f"ix_{table}_stream_id", table, ["stream_id"])
     op.create_table(

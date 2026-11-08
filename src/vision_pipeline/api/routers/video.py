@@ -54,3 +54,6 @@ def video_mjpeg(stream_id: str, request: Request) -> StreamingResponse:
         finally:
             with guard:
                 request.app.state.mjpeg_clients -= 1
+    return StreamingResponse(
+        generate(), media_type="multipart/x-mixed-replace; boundary=frame"
+    )

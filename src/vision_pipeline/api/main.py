@@ -16,7 +16,6 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy.engine import Engine
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from vision_pipeline.api.db.models import Stream

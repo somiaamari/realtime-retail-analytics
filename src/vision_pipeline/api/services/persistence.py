@@ -124,15 +124,15 @@ class PersistenceWorker:
             stream_id, event = item  # type: ignore[misc]
             rows.append(
                 EventRecord(
-                    stream_id=stream_id,
-                    timestamp=datetime.fromtimestamp(event.timestamp_s, timezone.utc),
-                    timestamp_s=event.timestamp_s,
-                    frame_id=event.frame_id,
-                    track_id=event.track_id,
-                    event_type=event.event_type.value,
-                    zone_id=event.zone_id,
-                    line_id=event.line_id,
-                    extra=event.extra,
+                    stream_id=stream_id,  # type: ignore[has-type]
+                    timestamp=datetime.fromtimestamp(event.timestamp_s, timezone.utc),  # type: ignore[has-type]
+                    timestamp_s=event.timestamp_s,  # type: ignore[has-type]
+                    frame_id=event.frame_id,  # type: ignore[has-type]
+                    track_id=event.track_id,  # type: ignore[has-type]
+                    event_type=event.event_type.value,  # type: ignore[has-type]
+                    zone_id=event.zone_id,  # type: ignore[has-type]
+                    line_id=event.line_id,  # type: ignore[has-type]
+                    extra=event.extra,  # type: ignore[has-type]
                 )
             )
         with self.session_factory() as session:
@@ -196,7 +196,7 @@ class PersistenceWorker:
                 (DwellRecord, DwellRecord.timestamp),
             ):
                 result = session.execute(delete(model).where(column < cutoff))
-                count += int(result.rowcount or 0)
+                count += int(result.rowcount or 0)  # type: ignore[attr-defined]
             session.commit()
         return count
 

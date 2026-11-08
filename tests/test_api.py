@@ -1,5 +1,7 @@
 """Fast deterministic API and migration tests."""
-
+import pytest
+pytest.importorskip("fastapi")
+pytest.importorskip("alembic")
 import json
 import time
 from pathlib import Path

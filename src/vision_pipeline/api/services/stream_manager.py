@@ -12,9 +12,9 @@ from vision_pipeline.analytics.geometry import AnalyticsConfig
 from vision_pipeline.api.realtime.hub import WebSocketHub
 from vision_pipeline.api.schemas.common import StreamCreate
 from vision_pipeline.api.services.persistence import PersistenceWorker
-from vision_pipeline.config import AppConfig, VideoConfig, load_config
+from vision_pipeline.config import load_config
 from vision_pipeline.detection.factory import create_detector
-from vision_pipeline.detection.yolo_detector import FakeDetector
+from vision_pipeline.detection.yolo_detector import BaseDetector, FakeDetector
 from vision_pipeline.streaming.engine import StreamingConfig, StreamingPipeline
 from vision_pipeline.streaming.sources import FakeSource, VideoSource, create_source
 from vision_pipeline.tracking.bytetrack import ByteTracker
@@ -115,7 +115,9 @@ class StreamManager:
             analytics_config = AnalyticsConfig.model_validate(
                 {"zones": zones, "lines": config.lines}
             )
-            detector = FakeDetector([Detection((120, 80, 190, 210), 0.95, 0, "person")])
+            detector: BaseDetector = FakeDetector(
+                [Detection((120, 80, 190, 210), 0.95, 0, "person")]
+            )
             tracker_config = None
         else:
             app_config = load_config(self.config_path)

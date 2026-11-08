@@ -1,6 +1,5 @@
 """Historical aggregate analytics endpoints."""
 
-import io
 from datetime import datetime
 from typing import Any
 
@@ -190,7 +189,9 @@ def heatmap_png(
     if snapshot is None or not snapshot.values:
         raise HTTPException(status_code=404, detail="No heatmap snapshot is available.")
     array = np.asarray(snapshot.values, dtype=np.float32)
-    normalized = cv2.normalize(array, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    normalized = cv2.normalize(  # type: ignore[call-overload]
+        array, None, 0, 255, cv2.NORM_MINMAX
+    ).astype(np.uint8)
     color = cv2.applyColorMap(normalized, cv2.COLORMAP_JET)
     ok, encoded = cv2.imencode(".png", color)
     if not ok:
