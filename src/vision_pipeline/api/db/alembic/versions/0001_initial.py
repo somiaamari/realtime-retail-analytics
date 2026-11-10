@@ -4,6 +4,8 @@ Revision ID: 0001
 Revises:
 """
 
+from typing import Any
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -77,7 +79,9 @@ def upgrade() -> None:
     op.create_index(
         "ix_bucket_stream_start", "bucket_stats", ["stream_id", "bucket_start"]
     )
-    for table, columns in (
+    table_definitions: tuple[
+        tuple[str, list[tuple[str, sa.types.TypeEngine[Any]]]], ...
+    ] = (
         (
             "zones",
             [
@@ -94,14 +98,17 @@ def upgrade() -> None:
                 ("geometry", sa.JSON()),
             ],
         ),
-    ):
+    )
+    for table, columns in table_definitions:
         op.create_table(
             table,
             sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
             sa.Column("stream_id", sa.String(128), nullable=False),
             *(sa.Column(name, kind, nullable=False) for name, kind in columns),
         )
-        op.create_index(f"ix_{table}_stream_id", table, ["stream_id"])
+        op.create_index(
+            "ix_heatmap_snapshots_stream_id", "heatmap_snapshots", ["stream_id"]
+        )  # type: ignore[arg-type, unused-ignore]
     op.create_table(
         "heatmap_snapshots",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),

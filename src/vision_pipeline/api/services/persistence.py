@@ -196,7 +196,7 @@ class PersistenceWorker:
                 (DwellRecord, DwellRecord.timestamp),
             ):
                 result = session.execute(delete(model).where(column < cutoff))
-                count += int(result.rowcount or 0)
+                count += int(result.rowcount or 0)  # type: ignore[attr-defined, unused-ignore]
             session.commit()
         return count
 

@@ -106,3 +106,7 @@ markers = [
     "requires_eval: tests requiring motmetrics from the optional evaluation extra",
     "requires_onnx: tests requiring the optional ONNX CPU extra",
 ]
+[[tool.mypy.overrides]]
+module = "vision_pipeline.api.*"
+disallow_untyped_decorators = false
+disallow_subclassing_any = false
