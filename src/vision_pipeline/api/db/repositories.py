@@ -81,7 +81,7 @@ class AnalyticsRepository:
             .order_by(HeatmapSnapshot.timestamp.desc())
             .limit(1)
         )
-        return cast(HeatmapSnapshot | None, result) # type: ignore[redundant-cast, unused-ignore]
+        return cast(HeatmapSnapshot | None, result)  # type: ignore[redundant-cast, unused-ignore]
 
 
 class StreamRepository:
