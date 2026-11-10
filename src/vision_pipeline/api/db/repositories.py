@@ -24,13 +24,13 @@ class EventRepository:
         self, stream_id: str, *, cursor: int | None, limit: int
     ) -> list[EventRecord]:
         """Return an ascending page after an optional event ID cursor."""
-        query: Select[tuple[EventRecord]] = select(EventRecord).where(  # type: ignore[assignment]
+        query: Select[tuple[EventRecord]] = select(EventRecord).where(
             EventRecord.stream_id == stream_id
         )
         if cursor is not None:
             query = query.where(EventRecord.id > cursor)
         return list(
-            self.session.scalars(query.order_by(EventRecord.id).limit(limit)).all()  # type: ignore[arg-type]
+            self.session.scalars(query.order_by(EventRecord.id).limit(limit)).all()
         )
 
 
@@ -74,7 +74,7 @@ class AnalyticsRepository:
 
     def heatmap(self, stream_id: str) -> HeatmapSnapshot | None:
         """Return the most recent heatmap aggregate for one stream."""
-        return self.session.scalar(
+        return self.session.scalar(  # type: ignore[no-any-return]
             select(HeatmapSnapshot)
             .where(HeatmapSnapshot.stream_id == stream_id)
             .order_by(HeatmapSnapshot.timestamp.desc())
@@ -90,7 +90,7 @@ class StreamRepository:
 
     def get(self, stream_id: str) -> Stream | None:
         """Fetch one stream configuration."""
-        return self.session.get(Stream, stream_id)
+        return self.session.get(Stream, stream_id)  # type: ignore[no-any-return]
 
     def list(self) -> list[Stream]:
         """List configured streams in stable ID order."""
