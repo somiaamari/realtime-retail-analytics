@@ -1,6 +1,7 @@
 """Typed database query helpers used by services and routers."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
@@ -74,12 +75,13 @@ class AnalyticsRepository:
 
     def heatmap(self, stream_id: str) -> HeatmapSnapshot | None:
         """Return the most recent heatmap aggregate for one stream."""
-        return self.session.scalar(
+        result = self.session.scalar(
             select(HeatmapSnapshot)
             .where(HeatmapSnapshot.stream_id == stream_id)
             .order_by(HeatmapSnapshot.timestamp.desc())
             .limit(1)
         )
+        return cast(HeatmapSnapshot | None, result) # type: ignore[redundant-cast, unused-ignore]
 
 
 class StreamRepository:
@@ -90,7 +92,8 @@ class StreamRepository:
 
     def get(self, stream_id: str) -> Stream | None:
         """Fetch one stream configuration."""
-        return self.session.get(Stream, stream_id)
+        result = self.session.get(Stream, stream_id)
+        return cast(Stream | None, result)  # type: ignore[redundant-cast, unused-ignore]
 
     def list(self) -> list[Stream]:
         """List configured streams in stable ID order."""
