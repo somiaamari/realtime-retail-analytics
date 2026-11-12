@@ -7,6 +7,8 @@
 
 A production-oriented foundation for a real-time smart retail video analytics pipeline. The planned system combines video ingestion, YOLO object detection, ByteTrack multi-object tracking, retail analytics, ONNX/TensorRT optimization, and a FastAPI/React dashboard. Phases 1-8 established the Python package, detection, tracking, analytics, fine-tuning, evaluation, model optimization, and a concurrent real-time streaming pipeline.
 
+**Phase 10 dashboard:** a responsive live operations and analytics interface with a standalone mock mode. See the [dashboard quick start](dashboard/README.md) and [dashboard architecture](docs/phase-10-dashboard.md). Deploy the static mock demo to Netlify using the instructions in the dashboard guide.
+
 **Phase 7 Performance Comparison:**
 By utilizing ONNX Runtime and TensorRT, we achieved a **12x speedup** over the PyTorch CPU baseline, enabling real-time inference at **183 FPS** on an NVIDIA T4 GPU.
 
@@ -42,7 +44,7 @@ flowchart LR
 - [x] Phase 7: Model optimization (ONNX/TensorRT)
 - [x] Phase 8: Real-time streaming pipeline
 - [x] Phase 9: Backend API
-- [ ] Phase 10: Dashboard
+- [x] Phase 10: Dashboard
 - [ ] Phase 11: Docker/tests/CI-CD
 - [ ] Phase 12: Docs/demo/release
 
@@ -173,3 +175,4 @@ source without keeping an annotated output, run
 - [Phase 8: Streaming Pipeline](docs/phase-08-streaming.md)
 - [Phase 9: Backend API](docs/phase-09-api.md)
 - [WebSocket Protocol](docs/websocket.md)
+- [Phase 10: Dashboard](docs/phase-10-dashboard.md)
